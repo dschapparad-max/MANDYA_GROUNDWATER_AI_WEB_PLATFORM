@@ -1,0 +1,42 @@
+{
+  "project": "Mandya District Groundwater AI",
+  "scope": "Mandya District",
+  "crs": "EPSG:32643",
+  "resolution_m": 30.0,
+  "grid": {
+    "rows": 3071,
+    "columns": 3643
+  },
+  "layers": [
+    {
+      "id": "FAHP_RECHARGE_INDEX",
+      "status": "AUTHORITATIVE",
+      "source": "G:\\My Drive\\Groundwater_AI_Project\\data\\labels\\groundwater_recharge_final\\groundwater_recharge_fahp_FINAL_10factor.tif",
+      "sha256": "b30d4aabdd4ebe3a4d41ffe78a768bbb42b4c6ea6707b87a2570c90f9200cdae"
+    },
+    {
+      "id": "XGBOOST_RECHARGE_PREDICTION",
+      "status": "AUTHORITATIVE",
+      "source": "C:\\Users\\bhara\\project\\COLAB_LOCAL_EXTRACTED\\SECTION_13_OUTPUT\\SECTION13_FINAL_XGBOOST\\02_SPATIAL_PRODUCTS\\SECTION13_final_XGBoost_recharge_index_prediction.tif",
+      "sha256": "8a7731dc61010ceae1cfd93cc1a69e3c6853bff753fa6075822637ac5faa728d"
+    },
+    {
+      "id": "XGBOOST_FIVE_RECHARGE_ZONES",
+      "status": "AUTHORITATIVE",
+      "source": "C:\\Users\\bhara\\project\\COLAB_LOCAL_EXTRACTED\\SECTION_14_OUTPUT\\01_RECHARGE_ZONATION\\SECTION14_XGBoost_recharge_index_5zone.tif",
+      "sha256": "f2f5fe274fd58cb6202bfe6f0d0304bf970a56986d231e93b60a33b387085c74"
+    },
+    {
+      "id": "CNN_GRU_RECHARGE_PREDICTION",
+      "status": "AUTHORITATIVE",
+      "source": "C:\\Users\\bhara\\project\\SECTION_38_LOCAL_OUTPUT\\38N_CNN_GRU_FULL_SPATIAL_PREDICTION\\section38N_CNN_GRU_recharge_index_prediction_30m.tif",
+      "sha256": "194714fe884802263a4fc954626dc4fd4dd4a8cb10413477bad55da2dbc5dc6a"
+    },
+    {
+      "id": "D8_CANDIDATE_PATHWAY_DIAGNOSTIC",
+      "status": "NON_AUTHORITATIVE_CANDIDATE",
+      "authoritative_section8": false,
+      "groundwater_flow_validation": false
+    }
+  ]
+}

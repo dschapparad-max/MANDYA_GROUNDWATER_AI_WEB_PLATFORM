@@ -1,0 +1,14 @@
+{
+  "generated": "2026-09-29T22:37:07",
+  "expected": {
+    "FAHP": "b30d4aabdd4ebe3a4d41ffe78a768bbb42b4c6ea6707b87a2570c90f9200cdae",
+    "XGBoost": "8a7731dc61010ceae1cfd93cc1a69e3c6853bff753fa6075822637ac5faa728d",
+    "CNN-GRU": "194714fe884802263a4fc954626dc4fd4dd4a8cb10413477bad55da2dbc5dc6a"
+  },
+  "actual": {
+    "FAHP": "b30d4aabdd4ebe3a4d41ffe78a768bbb42b4c6ea6707b87a2570c90f9200cdae",
+    "XGBoost": "8a7731dc61010ceae1cfd93cc1a69e3c6853bff753fa6075822637ac5faa728d",
+    "CNN-GRU": "194714fe884802263a4fc954626dc4fd4dd4a8cb10413477bad55da2dbc5dc6a"
+  },
+  "all_match": true
+}

@@ -1,0 +1,26 @@
+{
+  "api_version": "1.0",
+  "project": "Mandya Groundwater AI Decision-Support Platform",
+  "geographic_scope": "Mandya District",
+  "read_only_scientific_mode": true,
+  "allowed_services": [
+    "layer_metadata",
+    "raster_metadata",
+    "model_metadata",
+    "recharge_zone_metadata",
+    "provenance_metadata",
+    "claim_status"
+  ],
+  "prohibited_scientific_actions": [
+    "retrain_model",
+    "modify_frozen_raster",
+    "modify_spatial_partition",
+    "replace_authoritative_artifact",
+    "promote_candidate_D8",
+    "create_new_management_ranking"
+  ],
+  "target_description": "FAHP-derived groundwater recharge index",
+  "prediction_description": "AI-based spatial prediction of the FAHP-derived recharge index",
+  "real_time": false,
+  "groundwater_flow_validation": false
+}

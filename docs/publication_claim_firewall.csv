@@ -1,0 +1,12 @@
+claim_id,claim,status,web_allowed,source
+W01,Mandya District groundwater recharge-potential mapping is available.,SUPPORTED,True,FAHP final output
+W02,XGBoost provides spatial prediction of the FAHP-derived recharge index.,SUPPORTED,True,Sections 11–13
+W03,The final XGBoost model has an independent spatial test record.,SUPPORTED,True,Section 12
+W04,CNN-GRU provides a spatial prediction of the FAHP-derived recharge index.,SUPPORTED,True,Section 38N
+W05,Five recharge-potential zones are available as a decision-support layer.,SUPPORTED,True,Section 14
+W06,Candidate D8 pathway diagnostics are available.,SUPPORTED_WITH_PROVENANCE_WARNING,True,D8 final closure
+W07,Candidate D8 is the authoritative Section 8 flow-pathway layer.,NOT_SUPPORTED,False,D8 provenance firewall
+W08,Candidate D8 directly validates groundwater flow.,NOT_ESTABLISHED,False,D8 scientific boundary
+W09,The AI model directly predicts independently measured groundwater recharge.,NOT_ESTABLISHED,False,Current project target definition
+W10,The platform provides instantaneous real-time groundwater prediction.,NOT_ESTABLISHED,False,Current deployment architecture
+W11,Candidate D8 creates a new management-priority ranking.,NOT_CREATED,False,D8 closure

@@ -1,0 +1,60 @@
+{
+  "section": "SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA",
+  "status": "PASS",
+  "final_hard_qa": true,
+  "publication_package_qa": "PASS",
+  "web_platform_qa": "PASS",
+  "scientific_mutation": false,
+  "model_training": false,
+  "model_inference": false,
+  "new_recharge_zoning": false,
+  "new_management_ranking": false,
+  "section8_modified": false,
+  "candidate_d8_promoted": false,
+  "authoritative_web_layers": [
+    "FAHP_RECHARGE_INDEX",
+    "XGBOOST_RECHARGE_PREDICTION",
+    "XGBOOST_FIVE_RECHARGE_ZONES",
+    "CNN_GRU_RECHARGE_PREDICTION"
+  ],
+  "diagnostic_web_layers": [
+    "D8_CANDIDATE_PATHWAY_DIAGNOSTIC"
+  ],
+  "scientific_target": "FAHP-derived groundwater recharge index",
+  "ai_prediction_description": "AI-based spatial prediction of the FAHP-derived recharge index",
+  "groundwater_flow_validation": false,
+  "real_time_claim": false,
+  "d8_authoritative_section8": false,
+  "outputs": {
+    "layer_inventory": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\01_WEB_LAYERS\\section40_web_layer_inventory.csv",
+    "terminology_firewall": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\05_PUBLICATION_CLAIMS\\section40_publication_terminology_firewall.csv",
+    "claim_firewall": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\05_PUBLICATION_CLAIMS\\section40_web_publication_claim_firewall.csv",
+    "api_metadata": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\03_API_METADATA\\section40_api_metadata.json",
+    "frontend_configuration": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\06_DEPLOYMENT\\frontend_layer_configuration.json",
+    "backend_configuration": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\06_DEPLOYMENT\\backend_scientific_configuration.json",
+    "deployment_manifest": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\06_DEPLOYMENT\\section40_deployment_manifest.json",
+    "provenance_manifest": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\04_PROVENANCE\\section40_web_platform_provenance_manifest.json",
+    "report": "C:\\Users\\bhara\\project\\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\\07_REPORT\\section40_final_web_platform_report.txt"
+  },
+  "qa": {
+    "Section39_gate": true,
+    "required_layers": true,
+    "FAHP_hash": true,
+    "XGBoost_hash": true,
+    "CNN_GRU_hash": true,
+    "grid": true,
+    "FAHP_population": true,
+    "XGBoost_population": true,
+    "zone_population": true,
+    "CNN_GRU_population": true,
+    "five_zone_classes": true,
+    "D8_hard_QA": true,
+    "D8_non_authoritative": true,
+    "D8_pathway_population": true,
+    "D8_component_count": true,
+    "D8_largest_component": true,
+    "D8_area": true,
+    "web_claim_count": true,
+    "web_output_files": true
+  }
+}

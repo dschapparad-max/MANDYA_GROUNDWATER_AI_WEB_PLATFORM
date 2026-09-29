@@ -1,0 +1,70 @@
+==============================================================================
+SECTION 40 — FINAL WEB PLATFORM / DECISION-SUPPORT PACKAGE QA
+==============================================================================
+
+FINAL STATUS: PASS
+
+Scientific mutation: FALSE
+Model training: FALSE
+Model inference: FALSE
+New recharge zoning: FALSE
+New management ranking: FALSE
+Section 8 modification: FALSE
+Candidate D8 promotion: FALSE
+
+------------------------------------------------------------------------------
+PRIMARY WEB LAYERS
+------------------------------------------------------------------------------
+1. FAHP-derived groundwater recharge index
+2. XGBoost recharge-index prediction
+3. XGBoost five-zone recharge-potential map
+4. CNN-GRU recharge-index prediction
+
+------------------------------------------------------------------------------
+WEB GRID
+------------------------------------------------------------------------------
+CRS: EPSG:32643
+Resolution: 30.0 m
+Rows: 3071
+Columns: 3643
+
+------------------------------------------------------------------------------
+D8 WEB STATUS
+------------------------------------------------------------------------------
+Candidate D8: NON-AUTHORITATIVE
+Authoritative Section 8 recovered: FALSE
+Pathway pixels: 575303
+Pathway area km2: 517.7727
+Connected components: 83119
+Groundwater-flow validation: NOT ESTABLISHED
+
+------------------------------------------------------------------------------
+PUBLICATION LANGUAGE FIREWALL
+------------------------------------------------------------------------------
+Allowed:
+- FAHP-derived groundwater recharge index
+- AI-based spatial prediction of the FAHP-derived recharge index
+- XGBoost recharge-index prediction
+- CNN-GRU recharge-index prediction
+- Candidate D8 topographic-flow diagnostic, with qualification
+
+Not allowed:
+- measured groundwater recharge prediction
+- instantaneous real-time groundwater prediction
+- direct groundwater-flow validation from Candidate D8
+- authoritative Section 8 designation for Candidate D8
+- new management ranking from Candidate D8
+
+------------------------------------------------------------------------------
+WEB PACKAGE
+------------------------------------------------------------------------------
+Layer inventory: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\01_WEB_LAYERS\section40_web_layer_inventory.csv
+Terminology firewall: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\05_PUBLICATION_CLAIMS\section40_publication_terminology_firewall.csv
+Claim firewall: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\05_PUBLICATION_CLAIMS\section40_web_publication_claim_firewall.csv
+API metadata: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\03_API_METADATA\section40_api_metadata.json
+Frontend configuration: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\06_DEPLOYMENT\frontend_layer_configuration.json
+Backend configuration: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\06_DEPLOYMENT\backend_scientific_configuration.json
+Deployment manifest: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\06_DEPLOYMENT\section40_deployment_manifest.json
+Provenance manifest: [LOCAL_SOURCE_REDACTED]\project\SECTION_40_FINAL_WEB_PLATFORM_DECISION_SUPPORT_QA\04_PROVENANCE\section40_web_platform_provenance_manifest.json
+
+SECTION 40 FINAL HARD QA: PASS

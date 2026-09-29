@@ -1,0 +1,8 @@
+term,allowed,recommended_use
+FAHP-derived recharge index,True,Use for the spatial target produced by the FAHP framework.
+AI-based spatial prediction of FAHP-derived recharge index,True,Preferred description of XGBoost/CNN-GRU prediction outputs.
+measured groundwater recharge,False,Do not use as the direct target description for the current AI model.
+real-time groundwater prediction,False,Do not claim instantaneous real-time operation without a validated live data service.
+Candidate D8 flow-pathway diagnostic,True,Use with explicit candidate/provenance qualification.
+groundwater-flow validation,False,Do not use for Candidate D8.
+authoritative Section 8 pathway,False,Candidate D8 must not be represented this way.

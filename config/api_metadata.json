@@ -1,0 +1,65 @@
+{
+  "api_version": "1.0",
+  "project": "Mandya District Groundwater AI Decision-Support Platform",
+  "geographic_scope": "Mandya District",
+  "default_crs": "EPSG:32643",
+  "default_resolution_m": 30.0,
+  "layers": [
+    {
+      "layer_id": "FAHP_RECHARGE_INDEX",
+      "display_name": "FAHP-Derived Groundwater Recharge Index",
+      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "web_role": "PRIMARY_SCIENTIFIC_LAYER",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "continuous_index",
+      "description": "Final GIS/FAHP-derived groundwater recharge potential index for Mandya District."
+    },
+    {
+      "layer_id": "XGBOOST_RECHARGE_PREDICTION",
+      "display_name": "XGBoost Recharge-Index Prediction",
+      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "web_role": "PRIMARY_AI_LAYER",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "continuous_index",
+      "description": "Spatial prediction of the FAHP-derived groundwater recharge index using the final XGBoost model."
+    },
+    {
+      "layer_id": "XGBOOST_FIVE_RECHARGE_ZONES",
+      "display_name": "XGBoost Recharge Potential Zones",
+      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "web_role": "DECISION_SUPPORT_LAYER",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "categorical_zone",
+      "description": "Five percentile-based spatial zones derived from the final XGBoost recharge-index prediction."
+    },
+    {
+      "layer_id": "CNN_GRU_RECHARGE_PREDICTION",
+      "display_name": "CNN-GRU Recharge-Index Prediction",
+      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "web_role": "HYBRID_AI_LAYER",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "continuous_index",
+      "description": "Spatial prediction of the FAHP-derived groundwater recharge index from the final CNN-GRU model."
+    },
+    {
+      "layer_id": "D8_CANDIDATE_PATHWAY_DIAGNOSTIC",
+      "display_name": "Candidate D8 Topographic Flow-Pathway Diagnostic",
+      "status": "NON_AUTHORITATIVE_CANDIDATE",
+      "web_role": "DIAGNOSTIC_ONLY",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "candidate_flow_pathway",
+      "description": "Candidate D8-derived raster-topological pathway diagnostic. It is not the recovered authoritative Section 8 groundwater-flow product."
+    }
+  ],
+  "scientific_target": "FAHP-derived groundwater recharge index",
+  "ai_prediction_description": "AI-based spatial prediction of the FAHP-derived recharge index",
+  "d8_status": "NON-AUTHORITATIVE CANDIDATE",
+  "groundwater_flow_validation": false,
+  "real_time_claim": false,
+  "management_ranking_generated_here": false
+}

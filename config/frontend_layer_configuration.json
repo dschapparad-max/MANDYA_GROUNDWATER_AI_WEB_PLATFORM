@@ -1,0 +1,26 @@
+{
+  "application": "Mandya Groundwater AI Decision-Support Platform",
+  "geographic_scope": "Mandya District",
+  "map": {
+    "crs": "EPSG:32643",
+    "resolution_m": 30.0,
+    "default_layers": [
+      "FAHP_RECHARGE_INDEX",
+      "XGBOOST_RECHARGE_PREDICTION",
+      "XGBOOST_FIVE_RECHARGE_ZONES",
+      "CNN_GRU_RECHARGE_PREDICTION"
+    ],
+    "optional_diagnostic_layers": [
+      "D8_CANDIDATE_PATHWAY_DIAGNOSTIC"
+    ]
+  },
+  "layer_controls": {
+    "show_provenance": true,
+    "show_model_metadata": true,
+    "show_uncertainty_when_available": true,
+    "show_candidate_warning": true,
+    "allow_management_reclassification": false
+  },
+  "scientific_disclaimer": "AI outputs represent spatial prediction of the FAHP-derived groundwater recharge index. They should not be interpreted as direct measurements of groundwater recharge.",
+  "d8_disclaimer": "Candidate D8 pathway products are provenance-limited diagnostic outputs and are not authoritative Section 8 groundwater-flow validation."
+}

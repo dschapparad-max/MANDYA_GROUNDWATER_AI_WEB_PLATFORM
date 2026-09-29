@@ -1,0 +1,73 @@
+# Python
+pycache/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+Jupyter
+
+.ipynb_checkpoints/
+
+Operating system
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+IDE
+
+.vscode/
+.idea/
+
+Secrets
+
+.env
+.env.*
+!.env.example
+
+Private/local data
+
+local_data/
+private_data/
+raw_data/
+
+Scientific raster binaries
+
+*.tif
+*.tiff
+*.img
+*.bil
+*.jp2
+*.hdf
+*.h5
+*.nc
+
+Model binaries
+
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.keras
+*.onnx
+*.bin
+
+Temporary files
+
+*.tmp
+*.temp
+*.bak
+*.swp
+
+Logs
+
+*.log
+
+Build
+
+dist/
+build/
+coverage/

@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: "Mandya District Groundwater AI Decision-Support Platform"
+type: software
+version: "1.0.0"
+abstract: >
+GIS/remote-sensing and artificial-intelligence decision-support
+platform for spatial analysis of the FAHP-derived groundwater
+recharge index in Mandya District.
+keywords:
+
+groundwater
+recharge
+GIS
+remote sensing
+FAHP
+XGBoost
+CNN-GRU
+Mandya District

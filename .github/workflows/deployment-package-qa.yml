@@ -1,0 +1,195 @@
+name: Deployment Package QA
+
+on:
+push:
+branches:
+- main
+
+pull_request:
+branches:
+- main
+
+permissions:
+contents: read
+
+jobs:
+
+package-qa:
+
+runs-on: ubuntu-latest
+
+steps:
+
+  - name: Checkout repository
+    uses: actions/checkout@v4
+
+  - name: Validate repository structure
+    shell: bash
+    run: |
+
+      set -e
+
+      test -f README.md
+      test -f LICENSE
+      test -f .gitignore
+
+      test -f config/api_metadata.json
+      test -f config/frontend_layer_configuration.json
+      test -f config/backend_scientific_configuration.json
+      test -f config/deployment_manifest.json
+
+      test -f provenance/SCIENTIFIC_PROVENANCE.md
+      test -f provenance/frozen_artifact_checksums.json
+
+      test -f data_manifest/scientific_data_manifest.json
+
+      test -f docs/API_CONTRACT.md
+      test -f docs/SCIENTIFIC_USE_DISCLAIMER.md
+
+      echo "Repository structure: PASS"
+
+  - name: Validate JSON
+    shell: bash
+    run: |
+
+      set -e
+
+      python - <<'PY'
+
+      import json
+      from pathlib import Path
+
+      files = [
+
+          Path("config/api_metadata.json"),
+
+          Path(
+              "config/frontend_layer_configuration.json"
+          ),
+
+          Path(
+              "config/backend_scientific_configuration.json"
+          ),
+
+          Path(
+              "config/deployment_manifest.json"
+          ),
+
+          Path(
+              "provenance/frozen_artifact_checksums.json"
+          ),
+
+          Path(
+              "data_manifest/scientific_data_manifest.json"
+          ),
+      ]
+
+      for path in files:
+
+          with path.open(
+              "r",
+              encoding="utf-8"
+          ) as f:
+
+              json.load(f)
+
+          print(
+              "VALID:",
+              path
+          )
+
+      print(
+          "JSON QA: PASS"
+      )
+
+      PY
+
+  - name: Validate scientific firewall
+    shell: bash
+    run: |
+
+      set -e
+
+      python - <<'PY'
+
+      import json
+
+      with open(
+          "config/deployment_manifest.json",
+          "r",
+          encoding="utf-8"
+      ) as f:
+
+          deployment = json.load(f)
+
+      assert (
+          deployment["candidate_d8_promoted"]
+          is False
+      )
+
+      assert (
+          deployment["real_time_claim"]
+          is False
+      )
+
+      assert (
+          deployment["scientific_mutation"]
+          is False
+      )
+
+      assert (
+          deployment["model_training"]
+          is False
+      )
+
+      assert (
+          deployment["model_inference"]
+          is False
+      )
+
+      assert (
+          deployment["new_management_ranking"]
+          is False
+      )
+
+      print(
+          "Scientific firewall: PASS"
+      )
+
+      PY
+
+  - name: Validate frozen checksum manifest
+    shell: bash
+    run: |
+
+      set -e
+
+      python - <<'PY'
+
+      import json
+
+      with open(
+          "provenance/frozen_artifact_checksums.json",
+          "r",
+          encoding="utf-8"
+      ) as f:
+
+          checksums = json.load(f)
+
+      assert (
+          checksums["all_match"]
+          is True
+      )
+
+      print(
+          "Frozen checksum manifest: PASS"
+      )
+
+      PY
+
+  - name: Final QA
+    shell: bash
+    run: |
+
+      echo "SECTION 41 GITHUB PACKAGE QA: PASS"
+
