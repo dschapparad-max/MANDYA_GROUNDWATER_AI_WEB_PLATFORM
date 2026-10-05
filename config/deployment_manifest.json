@@ -1,24 +1,25 @@
-{
-  "platform": "Mandya District Groundwater AI Decision-Support Platform",
-  "deployment_stage": "PUBLICATION_PACKAGE_QA",
-  "geographic_scope": "Mandya District",
-  "frontend": "WEB_FRONTEND",
-  "backend": "API_BACKEND",
-  "scientific_layers": [
-    "FAHP_RECHARGE_INDEX",
-    "XGBOOST_RECHARGE_PREDICTION",
-    "XGBOOST_FIVE_RECHARGE_ZONES",
-    "CNN_GRU_RECHARGE_PREDICTION"
-  ],
-  "diagnostic_layers": [
-    "D8_CANDIDATE_PATHWAY_DIAGNOSTIC"
-  ],
-  "d8_authoritative": false,
-  "real_time_claim": false,
-  "scientific_mutation": false,
-  "model_training": false,
-  "model_inference": false,
-  "management_ranking_creation": false,
-  "source_section": "SECTION 39 FINAL PROJECT INTEGRATION",
-  "qa_status": "PENDING_FINAL_QA"
+﻿{
+    "platform":  "Mandya District Groundwater AI Decision-Support Platform",
+    "deployment_stage":  "PUBLICATION_PACKAGE_QA",
+    "geographic_scope":  "Mandya District",
+    "frontend":  "WEB_FRONTEND",
+    "backend":  "API_BACKEND",
+    "scientific_layers":  [
+                              "FAHP_RECHARGE_INDEX",
+                              "XGBOOST_RECHARGE_PREDICTION",
+                              "XGBOOST_FIVE_RECHARGE_ZONES",
+                              "CNN_GRU_RECHARGE_PREDICTION"
+                          ],
+    "diagnostic_layers":  [
+                              "D8_CANDIDATE_PATHWAY_DIAGNOSTIC"
+                          ],
+    "d8_authoritative":  false,
+    "real_time_claim":  false,
+    "scientific_mutation":  false,
+    "model_training":  false,
+    "model_inference":  false,
+    "management_ranking_creation":  false,
+    "source_section":  "SECTION 39 FINAL PROJECT INTEGRATION",
+    "qa_status":  "PENDING_FINAL_QA",
+    "candidate_d8_promoted":  false
 }
