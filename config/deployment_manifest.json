@@ -21,5 +21,6 @@
     "management_ranking_creation":  false,
     "source_section":  "SECTION 39 FINAL PROJECT INTEGRATION",
     "qa_status":  "PENDING_FINAL_QA",
-    "candidate_d8_promoted":  false
+    "candidate_d8_promoted":  false,
+    "new_management_ranking":  false
 }
