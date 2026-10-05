@@ -1,195 +1,192 @@
 name: Deployment Package QA
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
 
-pull_request:
-branches:
-- main
+  pull_request:
+    branches:
+      - main
 
 permissions:
-contents: read
+  contents: read
 
 jobs:
+  package-qa:
+    runs-on: ubuntu-latest
 
-package-qa:
+    steps:
 
-runs-on: ubuntu-latest
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-steps:
+      - name: Validate repository structure
+        shell: bash
+        run: |
 
-  - name: Checkout repository
-    uses: actions/checkout@v4
+          set -e
 
-  - name: Validate repository structure
-    shell: bash
-    run: |
+          test -f README.md
+          test -f LICENSE
+          test -f .gitignore
 
-      set -e
+          test -f config/api_metadata.json
+          test -f config/frontend_layer_configuration.json
+          test -f config/backend_scientific_configuration.json
+          test -f config/deployment_manifest.json
 
-      test -f README.md
-      test -f LICENSE
-      test -f .gitignore
+          test -f provenance/SCIENTIFIC_PROVENANCE.md
+          test -f provenance/frozen_artifact_checksums.json
 
-      test -f config/api_metadata.json
-      test -f config/frontend_layer_configuration.json
-      test -f config/backend_scientific_configuration.json
-      test -f config/deployment_manifest.json
+          test -f data_manifest/scientific_data_manifest.json
 
-      test -f provenance/SCIENTIFIC_PROVENANCE.md
-      test -f provenance/frozen_artifact_checksums.json
+          test -f docs/API_CONTRACT.md
+          test -f docs/SCIENTIFIC_USE_DISCLAIMER.md
 
-      test -f data_manifest/scientific_data_manifest.json
+          echo "Repository structure: PASS"
 
-      test -f docs/API_CONTRACT.md
-      test -f docs/SCIENTIFIC_USE_DISCLAIMER.md
+      - name: Validate JSON
+        shell: bash
+        run: |
 
-      echo "Repository structure: PASS"
+          set -e
 
-  - name: Validate JSON
-    shell: bash
-    run: |
+          python - <<'PY'
 
-      set -e
+          import json
+          from pathlib import Path
 
-      python - <<'PY'
+          files = [
 
-      import json
-      from pathlib import Path
+              Path("config/api_metadata.json"),
 
-      files = [
+              Path(
+                  "config/frontend_layer_configuration.json"
+              ),
 
-          Path("config/api_metadata.json"),
+              Path(
+                  "config/backend_scientific_configuration.json"
+              ),
 
-          Path(
-              "config/frontend_layer_configuration.json"
-          ),
+              Path(
+                  "config/deployment_manifest.json"
+              ),
 
-          Path(
-              "config/backend_scientific_configuration.json"
-          ),
+              Path(
+                  "provenance/frozen_artifact_checksums.json"
+              ),
 
-          Path(
-              "config/deployment_manifest.json"
-          ),
+              Path(
+                  "data_manifest/scientific_data_manifest.json"
+              ),
+          ]
 
-          Path(
-              "provenance/frozen_artifact_checksums.json"
-          ),
+          for path in files:
 
-          Path(
-              "data_manifest/scientific_data_manifest.json"
-          ),
-      ]
+              with path.open(
+                  "r",
+                  encoding="utf-8"
+              ) as f:
 
-      for path in files:
+                  json.load(f)
 
-          with path.open(
+              print(
+                  "VALID:",
+                  path
+              )
+
+          print(
+              "JSON QA: PASS"
+          )
+
+          PY
+
+      - name: Validate scientific firewall
+        shell: bash
+        run: |
+
+          set -e
+
+          python - <<'PY'
+
+          import json
+
+          with open(
+              "config/deployment_manifest.json",
               "r",
               encoding="utf-8"
           ) as f:
 
-              json.load(f)
+              deployment = json.load(f)
 
-          print(
-              "VALID:",
-              path
+          assert (
+              deployment["candidate_d8_promoted"]
+              is False
           )
 
-      print(
-          "JSON QA: PASS"
-      )
+          assert (
+              deployment["real_time_claim"]
+              is False
+          )
 
-      PY
+          assert (
+              deployment["scientific_mutation"]
+              is False
+          )
 
-  - name: Validate scientific firewall
-    shell: bash
-    run: |
+          assert (
+              deployment["model_training"]
+              is False
+          )
 
-      set -e
+          assert (
+              deployment["model_inference"]
+              is False
+          )
 
-      python - <<'PY'
+          assert (
+              deployment["new_management_ranking"]
+              is False
+          )
 
-      import json
+          print(
+              "Scientific firewall: PASS"
+          )
 
-      with open(
-          "config/deployment_manifest.json",
-          "r",
-          encoding="utf-8"
-      ) as f:
+          PY
 
-          deployment = json.load(f)
+      - name: Validate frozen checksum manifest
+        shell: bash
+        run: |
 
-      assert (
-          deployment["candidate_d8_promoted"]
-          is False
-      )
+          set -e
 
-      assert (
-          deployment["real_time_claim"]
-          is False
-      )
+          python - <<'PY'
 
-      assert (
-          deployment["scientific_mutation"]
-          is False
-      )
+          import json
 
-      assert (
-          deployment["model_training"]
-          is False
-      )
+          with open(
+              "provenance/frozen_artifact_checksums.json",
+              "r",
+              encoding="utf-8"
+          ) as f:
 
-      assert (
-          deployment["model_inference"]
-          is False
-      )
+              checksums = json.load(f)
 
-      assert (
-          deployment["new_management_ranking"]
-          is False
-      )
+          assert (
+              checksums["all_match"]
+              is True
+          )
 
-      print(
-          "Scientific firewall: PASS"
-      )
+          print(
+              "Frozen checksum manifest: PASS"
+          )
 
-      PY
+          PY
 
-  - name: Validate frozen checksum manifest
-    shell: bash
-    run: |
+      - name: Final QA
+        shell: bash
+        run: |
 
-      set -e
-
-      python - <<'PY'
-
-      import json
-
-      with open(
-          "provenance/frozen_artifact_checksums.json",
-          "r",
-          encoding="utf-8"
-      ) as f:
-
-          checksums = json.load(f)
-
-      assert (
-          checksums["all_match"]
-          is True
-      )
-
-      print(
-          "Frozen checksum manifest: PASS"
-      )
-
-      PY
-
-  - name: Final QA
-    shell: bash
-    run: |
-
-      echo "SECTION 41 GITHUB PACKAGE QA: PASS"
-
+          echo "SECTION 41 GITHUB PACKAGE QA: PASS"
