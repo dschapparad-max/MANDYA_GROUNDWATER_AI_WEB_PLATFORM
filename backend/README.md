@@ -1,22 +1,34 @@
-# Backend
+# Mandya Groundwater AI Backend
 
-The backend is intended to provide read-only scientific metadata and
-decision-support services.
+Read-only FastAPI backend for the verified scientific web-platform
+metadata and provenance contract.
 
-Responsibilities
-layer metadata
-model metadata
-provenance metadata
-zone metadata
-publication claim status
-Restrictions
+## Endpoints
 
-The backend must not silently modify frozen scientific artifacts.
+GET /health
 
-Any future model update requires explicit versioning and provenance.
+GET /api/metadata
 
-Current state
+GET /api/layers
 
-This repository defines the deployment contract.
+GET /api/layers/{layer_id}
 
-It does not claim that a production backend has already been deployed.
+GET /api/provenance
+
+GET /api/claims
+
+GET /api/zones
+
+## Scientific restrictions
+
+This backend does not:
+
+- train models
+- perform new model inference
+- modify scientific rasters
+- create recharge zones
+- create management rankings
+- promote Candidate D8
+- make real-time groundwater predictions
+
+The backend reads committed project configuration and provenance files.

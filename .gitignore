@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 pycache/
 *.py[cod]
 *.pyo
@@ -71,3 +71,10 @@ Build
 dist/
 build/
 coverage/
+
+# Node.js dependencies
+node_modules/
+
+# Python bytecode caches
+__pycache__/
+

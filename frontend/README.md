@@ -1,41 +1,23 @@
-# Frontend
+# Mandya Groundwater AI Frontend
 
-The frontend is intended to provide a map-based groundwater
-decision-support interface for Mandya District.
+React/Vite frontend foundation for the Mandya Groundwater AI web platform.
 
-Primary layers
-FAHP recharge index
-XGBoost recharge-index prediction
-XGBoost five-zone recharge map
-CNN-GRU recharge-index prediction
-Required layer metadata
+## Current implementation
 
-Each layer should expose:
+The frontend currently provides:
 
-layer name
-source/model
-spatial resolution
-CRS
-provenance status
-scientific target
-disclaimer
-Candidate D8
+- project metadata
+- authoritative layer registry
+- five recharge zones
+- provenance display
+- scientific claims
+- scientific disclaimer
+- Candidate D8 disclaimer
+- read-only API integration
 
-Candidate D8 must be hidden by default.
+## Raster hosting
 
-If displayed for research diagnostics, it must carry a visible:
+No raster-serving URL is invented by this implementation.
 
-NON-AUTHORITATIVE / PROVENANCE-LIMITED
-
-warning.
-
-Unsupported claims prohibited
-
-The frontend must not present:
-
-measured groundwater recharge
-real-time groundwater prediction
-direct groundwater-flow validation
-authoritative D8 pathway
-
-unless future scientific validation explicitly establishes such claims.
+Actual map-tile/raster rendering will be enabled only after a verified
+deployment/storage source is explicitly configured.
