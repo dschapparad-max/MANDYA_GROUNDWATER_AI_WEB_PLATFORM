@@ -1,0 +1,22 @@
+﻿{
+  "layer_id": "FAHP_RECHARGE_INDEX",
+  "display_name": "FAHP-Derived Groundwater Recharge Index",
+  "crs": "EPSG:32643",
+  "web_crs": "EPSG:3857",
+  "resolution_m": 30,
+  "width": 3643,
+  "height": 3071,
+  "min": 0.2082815021276474,
+  "max": 0.7693594098091125,
+  "bounds": {
+    "west": 76.32830611638168,
+    "south": 12.216463899311849,
+    "east": 77.34024429403966,
+    "north": 13.056106646023311
+  },
+  "tile_scheme": "XYZ",
+  "tile_size": 256,
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "source": "verified FAHP scientific raster metadata"
+}

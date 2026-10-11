@@ -1,0 +1,30 @@
+﻿{
+  "layer_id": "XGBOOST_FIVE_RECHARGE_ZONES",
+  "display_name": "XGBoost Recharge Potential Zones",
+  "crs": "EPSG:32643",
+  "web_crs": "EPSG:3857",
+  "resolution_m": 30,
+  "width": 3643,
+  "height": 3071,
+  "nodata": 255,
+  "classes": {
+    "1": "Very Low",
+    "2": "Low",
+    "3": "Moderate",
+    "4": "High",
+    "5": "Very High"
+  },
+  "bounds": {
+    "west": 76.32830611638168,
+    "south": 12.216463899311849,
+    "east": 77.34024429403966,
+    "north": 13.056106646023311
+  },
+  "tile_scheme": "XYZ",
+  "tile_size": 256,
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "scientific_target": "FAHP-derived groundwater recharge index",
+  "description": "Five percentile-based spatial zones from the final XGBoost prediction",
+  "source_sha256": "F2F5FE274FD58CB6202BFE6F0D0304BF970A56986D231E93B60A33B387085C74"
+}

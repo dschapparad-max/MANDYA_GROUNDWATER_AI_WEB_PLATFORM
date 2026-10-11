@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import GroundwaterMap from "./components/GroundwaterMap";
 import {
   getClaims,
   getLayers,
@@ -80,7 +80,9 @@ function App() {
     <main className="page">
       <header className="hero">
         <p className="eyebrow">GIS + AI DECISION SUPPORT</p>
+
         <h1>Mandya Groundwater AI</h1>
+
         <p>
           Groundwater recharge assessment and AI-based spatial prediction
           platform for Mandya District.
@@ -89,6 +91,7 @@ function App() {
 
       <section className="scientific-banner">
         <strong>Scientific scope</strong>
+
         <span>
           Mandya District · EPSG:32643 · 30 m · read-only scientific mode
         </span>
@@ -119,7 +122,9 @@ function App() {
           <div className="layer-list">
             {layers.map((layer) => (
               <div className="layer-card" key={layer.layer_id}>
-                <strong>{layer.display_name ?? layer.layer_id}</strong>
+                <strong>
+                  {layer.display_name ?? layer.layer_id}
+                </strong>
 
                 <span>
                   {layer.status ?? "STATUS NOT PROVIDED"}
@@ -137,19 +142,7 @@ function App() {
       <section className="panel">
         <h2>Map View</h2>
 
-        <div className="map-placeholder">
-          <div>
-            <strong>Map renderer foundation</strong>
-            <p>
-              The scientific layer registry is connected. Actual raster
-              serving URLs have not been invented or assumed.
-            </p>
-            <p>
-              Raster hosting will be enabled only after an explicit,
-              verified deployment source is configured.
-            </p>
-          </div>
-        </div>
+        <GroundwaterMap />
       </section>
 
       <section className="grid">

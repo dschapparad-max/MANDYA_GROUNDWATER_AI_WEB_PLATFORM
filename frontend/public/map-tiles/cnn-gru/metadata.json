@@ -1,0 +1,26 @@
+{
+  "layer_id": "CNN_GRU_RECHARGE_PREDICTION",
+  "display_name": "CNN-GRU Recharge-Index Prediction",
+  "crs": "EPSG:32643",
+  "web_crs": "EPSG:3857",
+  "resolution_m": 30,
+  "width": 3643,
+  "height": 3071,
+  "dtype": "float32",
+  "nodata": -9999.0,
+  "min": 0.30895867943763733,
+  "max": 0.6794024705886841,
+  "bounds": {
+    "west": 76.3283061163817,
+    "south": 12.216522330944494,
+    "east": 77.34012215608182,
+    "north": 13.056106646023306
+  },
+  "tile_scheme": "XYZ",
+  "tile_size": 256,
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "scientific_target": "FAHP-derived groundwater recharge index",
+  "prediction_description": "AI-based spatial prediction of the FAHP-derived groundwater recharge index using the frozen CNN-GRU model",
+  "source_sha256": "194714FE884802263A4FC954626DC4FD4DD4A8CB10413477BAD55DA2DBC5DC6A"
+}

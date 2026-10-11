@@ -33,3 +33,16 @@ export function getClaims() {
 export function getZones() {
   return apiGet("/api/zones");
 }
+export async function fetchRasterMetadata(layerId) {
+  const response = await fetch(
+    `/api/rasters/${encodeURIComponent(layerId)}/metadata`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load raster metadata: ${response.status}`
+    );
+  }
+
+  return response.json();
+}
