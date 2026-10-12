@@ -6,6 +6,7 @@ from app.routes import (
     layers,
     metadata,
     provenance,
+    rasters,
     zones,
 )
 
@@ -50,6 +51,11 @@ app.include_router(
 
 app.include_router(
     zones.router,
+    prefix="/api",
+)
+
+app.include_router(
+    rasters.router,
     prefix="/api",
 )
 
