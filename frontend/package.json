@@ -9,8 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "georaster": "^1.6.0",
-    "georaster-layer-for-leaflet": "^4.1.2",
     "leaflet": "^1.9.4",
     "proj4": "^2.22.0",
     "proj4leaflet": "^1.0.2",
