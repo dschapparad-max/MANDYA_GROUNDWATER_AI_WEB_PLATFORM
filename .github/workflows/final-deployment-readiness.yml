@@ -75,6 +75,11 @@ jobs:
           print("JSON QA: PASS")
           PY
 
+      - name: Validate scientific provenance consistency
+        shell: bash
+        run: |
+          set -e
+          python scripts/validate_scientific_provenance.py
       - name: Scientific firewall
         shell: bash
         run: |

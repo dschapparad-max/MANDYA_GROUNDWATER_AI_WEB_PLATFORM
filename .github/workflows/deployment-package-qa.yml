@@ -53,7 +53,6 @@ jobs:
           set -e
 
           python - <<'PY'
-
           import json
           from pathlib import Path
 
@@ -102,6 +101,11 @@ jobs:
 
           PY
 
+      - name: Validate scientific provenance consistency
+        shell: bash
+        run: |
+          set -e
+          python scripts/validate_scientific_provenance.py
       - name: Validate scientific firewall
         shell: bash
         run: |
@@ -109,7 +113,6 @@ jobs:
           set -e
 
           python - <<'PY'
-
           import json
 
           with open(
@@ -163,7 +166,6 @@ jobs:
           set -e
 
           python - <<'PY'
-
           import json
 
           with open(
