@@ -1,6 +1,13 @@
-
+import VillageSearch from "./VillageSearch";
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -74,20 +81,44 @@ async function loadLayerMetadata(url, expectedLayerId) {
 // Map extent
 // -----------------------------------------------------------------------------
 
-function MapExtentController({ bounds }) {
+function MapExtentController({ bounds, selectedLocation }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!bounds) return;
+    // A user-selected location takes priority over the initial study-area extent.
+    if (selectedLocation) {
+      map.flyTo(
+        [selectedLocation.lat, selectedLocation.lon],
+        MAX_ZOOM,
+        { animate: true, duration: 1.2 }
+      );
+      return;
+    }
 
-    map.fitBounds(
-      L.latLngBounds(
-        [bounds.south, bounds.west],
-        [bounds.north, bounds.east]
-      ),
-      { padding: [20, 20] }
-    );
-  }, [map, bounds]);
+    if (bounds) {
+      map.fitBounds(
+        L.latLngBounds(
+          [bounds.south, bounds.west],
+          [bounds.north, bounds.east]
+        ),
+        { padding: [20, 20] }
+      );
+    }
+  }, [map, bounds, selectedLocation]);
+
+  return null;
+}
+
+// ----------------------------------------------------------------------------
+// Location selection: map clicks are queried against the existing frozen rasters
+// ----------------------------------------------------------------------------
+
+function LocationClickController({ onSelect }) {
+  useMapEvents({
+    click(event) {
+      onSelect(event.latlng.lat, event.latlng.lng);
+    },
+  });
 
   return null;
 }
@@ -153,35 +184,35 @@ function ScientificRasterLayers({
     },
   ];
 
-  return (
-    <>
-      {layers.map(
-        ({ id, visible, metadata, url, opacity, label }) =>
-          visible &&
-          metadata && (
-            <TileLayer
-              key={`${id}-scientific-raster`}
-              url={url}
-              minZoom={MIN_ZOOM}
-              maxZoom={MAX_ZOOM}
-              bounds={[
-                [metadata.bounds.south, metadata.bounds.west],
-                [metadata.bounds.north, metadata.bounds.east],
-              ]}
-              pane={paneName}
-              opacity={opacity}
-              tileSize={256}
-              updateWhenZooming={false}
-              updateWhenIdle
-              eventHandlers={{
-                tileerror: (event) =>
-                  console.error(`${label} scientific tile error:`, event),
-              }}
-            />
-          )
-      )}
-    </>
-  );
+  
+return (
+  <>
+    {layers.map(
+      ({ id, visible, metadata, url, opacity }) =>
+        visible &&
+        metadata && (
+          <TileLayer
+            key={`${id}-scientific-raster`}
+            url={url}
+            minZoom={MIN_ZOOM}
+            maxZoom={MAX_ZOOM}
+            bounds={[
+              [metadata.bounds.south, metadata.bounds.west],
+              [metadata.bounds.north, metadata.bounds.east],
+            ]}
+            pane={paneName}
+            opacity={opacity}
+            tileSize={256}
+            updateWhenZooming={false}
+            updateWhenIdle
+          />
+        )
+    )}
+
+    <VillageSearch />
+  </>
+);
+
 }
 
 // -----------------------------------------------------------------------------
@@ -203,6 +234,7 @@ const panelStyle = {
 
 // -----------------------------------------------------------------------------
 // Layer controls
+// Enabling one layer automatically disables the other three.
 // -----------------------------------------------------------------------------
 
 function ScientificLayerControl({
@@ -251,7 +283,18 @@ function ScientificLayerControl({
           <input
             type="checkbox"
             checked={checked}
-            onChange={(event) => setChecked(event.target.checked)}
+            onChange={(event) => {
+              const enabled = event.target.checked;
+
+              if (enabled) {
+                setShowFahp(label === "FAHP Recharge Index");
+                setShowXgboost(label === "XGBoost Prediction");
+                setShowXgboostZones(label === "XGBoost Recharge Zones");
+                setShowCnnGru(label === "CNN-GRU Recharge Prediction");
+              } else {
+                setChecked(false);
+              }
+            }}
           />
           <span>{label}</span>
         </label>
@@ -527,6 +570,72 @@ export default function GroundwaterMap() {
   const [showXgboostZones, setShowXgboostZones] = useState(false);
   const [showCnnGru, setShowCnnGru] = useState(false);
 
+  // Location query state. This samples the existing authoritative rasters only;
+  // it does not run inference, modify outputs, or calculate a new suitability score.
+  const [latitudeInput, setLatitudeInput] = useState("");
+  const [longitudeInput, setLongitudeInput] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [queryResult, setQueryResult] = useState(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState(null);
+
+  async function queryLocation(latitude, longitude) {
+    if (String(latitude).trim() === "" || String(longitude).trim() === "") {
+      setQueryError("Enter both latitude and longitude.");
+      return;
+    }
+
+    const lat = Number(latitude);
+    const lon = Number(longitude);
+
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lon) ||
+      lat < -90 ||
+      lat > 90 ||
+      lon < -180 ||
+      lon > 180
+    ) {
+      setQueryError("Enter valid WGS84 latitude and longitude values.");
+      return;
+    }
+
+    setLatitudeInput(lat.toFixed(6));
+    setLongitudeInput(lon.toFixed(6));
+    setSelectedLocation({ lat, lon });
+    setQueryResult(null);
+    setQueryError(null);
+    setQueryLoading(true);
+
+    try {
+      const params = new URLSearchParams({
+        lat: String(lat),
+        lon: String(lon),
+      });
+      const response = await fetch(`/api/raster-query?${params.toString()}`);
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const detail = payload?.detail;
+        throw new Error(
+          typeof detail === "string"
+            ? detail
+            : `Location query failed (${response.status}).`
+        );
+      }
+
+      if (!payload || typeof payload.results !== "object") {
+        throw new Error("The location API returned an unexpected response.");
+      }
+
+      setQueryResult(payload);
+    } catch (error) {
+      setQueryError(error.message || "Unable to query this location.");
+    } finally {
+      setQueryLoading(false);
+    }
+  }
+
   // Layout fixes, including small-screen sizing.
   useEffect(() => {
     const styleId = "groundwater-map-layout-fixes";
@@ -571,6 +680,25 @@ export default function GroundwaterMap() {
             bottom: 8px !important;
             width: min(220px, calc(100% - 16px)) !important;
             max-height: 28% !important;
+          }
+
+          .gw-query-panel {
+            right: 8px !important;
+            top: 42% !important;
+            width: min(220px, calc(100% - 16px)) !important;
+            max-height: 30% !important;
+            padding: 8px !important;
+            font-size: 10px !important;
+          }
+
+          .gw-query-panel input {
+            font-size: 12px !important;
+            min-height: 28px;
+          }
+
+          .gw-query-panel button {
+            font-size: 11px !important;
+            min-height: 32px;
           }
         }
       `;
@@ -684,6 +812,33 @@ export default function GroundwaterMap() {
           maxZoom={19}
         />
 
+        <LocationClickController
+          onSelect={(lat, lon) => {
+            void queryLocation(lat, lon);
+          }}
+        />
+     
+        {selectedLocation && (
+          <CircleMarker
+            center={[selectedLocation.lat, selectedLocation.lon]}
+            radius={7}
+            pathOptions={{
+              color: "#ffffff",
+              weight: 2,
+              fillColor: "#d73027",
+              fillOpacity: 1,
+            }}
+          >
+            <Popup>
+              <strong>Selected location</strong>
+              <br />
+              Latitude: {selectedLocation.lat.toFixed(6)}
+              <br />
+              Longitude: {selectedLocation.lon.toFixed(6)}
+            </Popup>
+          </CircleMarker>
+        )}
+
         <ScientificRasterLayers
           showFahp={showFahp}
           showXgboost={showXgboost}
@@ -695,8 +850,134 @@ export default function GroundwaterMap() {
           cnnGruMetadata={cnnGruMetadata}
         />
 
-        <MapExtentController bounds={mapBounds} />
+        <MapExtentController
+          bounds={mapBounds}
+          selectedLocation={selectedLocation}
+        />
       </MapContainer>
+
+      <div
+        className="gw-query-panel"
+        role="region"
+        aria-label="Location-based recharge query"
+        style={{
+          ...panelStyle,
+          zIndex: 1100,
+          right: 12,
+          top: "42%",
+          width: "min(300px, calc(100% - 24px))",
+          maxHeight: "38%",
+          overflowY: "auto",
+          padding: 12,
+        }}
+      >
+        <strong>Location query</strong>
+        <p style={{ margin: "6px 0" }}>
+          Click the map or enter latitude and longitude (WGS84).
+        </p>
+
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void queryLocation(latitudeInput, longitudeInput);
+          }}
+        >
+          <label style={{ display: "block", marginBottom: 6 }}>
+            Latitude
+            <input
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              required
+              value={latitudeInput}
+              onChange={(event) => setLatitudeInput(event.target.value)}
+              aria-label="Latitude in decimal degrees"
+              style={{
+                display: "block",
+                width: "100%",
+                minHeight: 30,
+                boxSizing: "border-box",
+              }}
+            />
+          </label>
+
+          <label style={{ display: "block", marginBottom: 6 }}>
+            Longitude
+            <input
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              required
+              value={longitudeInput}
+              onChange={(event) => setLongitudeInput(event.target.value)}
+              aria-label="Longitude in decimal degrees"
+              style={{
+                display: "block",
+                width: "100%",
+                minHeight: 30,
+                boxSizing: "border-box",
+              }}
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={queryLoading}
+            style={{
+              marginTop: 3,
+              padding: "7px 10px",
+              cursor: queryLoading ? "wait" : "pointer",
+            }}
+          >
+            {queryLoading ? "Querying rasters..." : "Check location"}
+          </button>
+        </form>
+
+        {queryError && (
+          <p role="alert" style={{ color: "#a61b1b", marginBottom: 0 }}>
+            {queryError}
+          </p>
+        )}
+
+        {queryResult && (
+          <div style={{ marginTop: 10 }} aria-live="polite">
+            <strong>Results for selected location</strong>
+            {Object.entries(queryResult.results).map(([label, item]) => (
+              <div
+                key={label}
+                style={{
+                  borderTop: "1px solid #ddd",
+                  padding: "6px 0",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                <strong>{label}</strong>
+                <br />
+                {item.status === "ok"
+                  ? item.value
+                  : item.status === "nodata"
+                    ? "NoData at this location"
+                    : item.status === "outside_coverage"
+                      ? "Outside raster coverage"
+                      : "Value unavailable"}
+              </div>
+            ))}
+
+            {queryResult.interpretation && (
+              <p style={{ fontSize: 10, color: "#555" }}>
+                {queryResult.interpretation}
+              </p>
+            )}
+            {queryResult.disclaimer && (
+              <p style={{ fontSize: 10, color: "#555" }}>
+                {queryResult.disclaimer}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       <ScientificLayerControl
         showFahp={showFahp}
