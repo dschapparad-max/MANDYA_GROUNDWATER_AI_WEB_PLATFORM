@@ -433,7 +433,8 @@ function ScientificLegend({
       aria-label="Map legend"
       style={{
         ...panelStyle,
-        left: 12,
+        right: 12,
+        left: "auto",
         bottom: 12,
         width: "min(280px, calc(100% - 24px))",
         maxHeight: "32%",
@@ -657,51 +658,114 @@ export default function GroundwaterMap() {
           overflow-wrap: anywhere;
         }
 
-        @media (max-width: 640px) {
-          .gw-layer-control {
-            top: 8px !important;
-            right: 8px !important;
-            width: min(250px, calc(100% - 16px)) !important;
-            padding: 8px 10px !important;
-            font-size: 10px !important;
-          }
-
+        @media (max-width: 768px) {
+          /* Separate the two top controls instead of allowing them to overlap. */
           .gw-interpretation-panel {
             top: 8px !important;
             left: 8px !important;
-            width: min(200px, calc(100% - 16px)) !important;
-            max-height: 20% !important;
+            right: auto !important;
+            width: calc(50% - 12px) !important;
+            max-width: 180px !important;
+            max-height: 19% !important;
+            overflow-y: auto !important;
+            padding: 7px 8px !important;
+            font-size: 9px !important;
+            overflow-wrap: anywhere;
+          }
+
+          .gw-layer-control {
+            top: 8px !important;
+            right: 8px !important;
+            left: auto !important;
+            width: calc(50% - 12px) !important;
+            max-width: 180px !important;
+            max-height: 24% !important;
+            overflow-y: auto !important;
+            box-sizing: border-box !important;
             padding: 7px 8px !important;
             font-size: 9px !important;
           }
 
-          .gw-legend-container {
-            left: 8px !important;
-            bottom: 8px !important;
-            width: min(220px, calc(100% - 16px)) !important;
-            max-height: 28% !important;
-          }
-
+          /* The coordinate form gets its own middle band. */
           .gw-query-panel {
+            top: 27% !important;
+            left: 8px !important;
             right: 8px !important;
-            top: 42% !important;
-            width: min(220px, calc(100% - 16px)) !important;
-            max-height: 30% !important;
+            width: auto !important;
+            max-height: 39% !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            box-sizing: border-box !important;
             padding: 8px !important;
             font-size: 10px !important;
           }
 
+          .gw-query-panel p {
+            margin: 3px 0 !important;
+          }
+
+          .gw-query-panel label {
+            margin-bottom: 3px !important;
+          }
+
           .gw-query-panel input {
-            font-size: 12px !important;
-            min-height: 28px;
+            width: 100% !important;
+            min-height: 30px !important;
+            box-sizing: border-box !important;
+            font-size: 14px !important;
           }
 
           .gw-query-panel button {
-            font-size: 11px !important;
-            min-height: 32px;
+            min-height: 32px !important;
+            font-size: 12px !important;
+          }
+
+          /* Legend occupies the bottom-right column beside village search. */
+          .gw-legend-container {
+            left: auto !important;
+            right: 8px !important;
+            bottom: 8px !important;
+            width: calc(37% - 8px) !important;
+            max-width: 160px !important;
+            max-height: 34% !important;
+            box-sizing: border-box !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            padding: 6px !important;
+            font-size: 9px !important;
           }
         }
-      `;
+
+        @media (max-width: 420px) {
+          .gw-interpretation-panel {
+            max-height: 18% !important;
+            padding: 6px !important;
+            font-size: 8px !important;
+          }
+
+          .gw-layer-control {
+            max-height: 23% !important;
+            padding: 6px !important;
+            font-size: 9px !important;
+          }
+
+          .gw-query-panel {
+            top: 27% !important;
+            max-height: 39% !important;
+          }
+
+          .gw-legend-container {
+            width: calc(42% - 8px) !important;
+            max-width: calc(42% - 8px) !important;
+            max-height: 33% !important;
+          }
+
+          .gw-legend-container span {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            font-size: 10px !important;
+          }
+        }      `;
       document.head.appendChild(style);
     }
   }, []);
