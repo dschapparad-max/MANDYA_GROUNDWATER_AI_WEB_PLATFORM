@@ -11,6 +11,9 @@ def zones():
         "type": "categorical_zone",
         "classes": [1, 2, 3, 4, 5],
         "description":
-            "Five recharge-potential zones from the authoritative "
-            "XGBoost decision-support layer.",
+            "Five percentile-based spatial classes derived from the final "
+            "XGBoost recharge-index prediction. The available metadata "
+            "confirms classes 1-5 but does not define their percentile "
+            "boundaries or ordinal direction. Do not treat the numeric "
+            "class as a verified borewell-suitability ranking.",
     }

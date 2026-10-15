@@ -1,14 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+
 from app.routes import (
     claims,
     layers,
     metadata,
     provenance,
     rasters,
+    raster_query,
     zones,
 )
+
 
 app = FastAPI(
     title="Mandya Groundwater AI API",
@@ -27,6 +30,11 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    raster_query.router,
+    prefix="/api",
 )
 
 app.include_router(
