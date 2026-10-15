@@ -30,3 +30,17 @@ Promotion requires recovering the exact historical raster with its expected SHA-
 ## Scope and limitation
 
 This disposition records the evidence gap and the safe operational decision. It does **not** resolve the historical raster's identity or prove which conflicting threshold was intended by the original frozen workflow.
+
+## Final local recovery search (2026-10-15)
+
+A recursive filename-based search under `C:\Users\bhara\project` examined TIFF files whose names matched Section 8E or primary flow-pathway patterns, excluding `.git`, `node_modules`, and `.venv`.
+
+Results:
+- The known candidate raster retains SHA-256 `4994c69f216171bbb7cbc99d9df8ea53aaa16e081ee94680bd1d2b740beeda05`.
+- The pathway-area raster and its checkpoint copy have SHA-256 `c0ef33571d45a35c1b73b3e12d58b3ed58d5731c990b1315ffc0e6de075c4327`.
+- No searched raster matched the expected historical frozen Section 8E SHA-256 `74d1f57d4af03d8eecab55c1656db5d90deeba1fa022443cbd469a8fd09c337b`.
+- No archive with a filename matching Section 8, flow pathway, or frozen artifact was found in the searched workspace.
+
+This was a workspace filename/hash search, not proof that no copy exists on external storage, disconnected drives, or archives with unrelated names.
+
+**Disposition:** the targeted local recovery attempt is complete without recovering the historical artifact. The threshold discrepancy (10 versus 12) remains unresolved. Keep the candidate pathway non-authoritative and diagnostic only. Reopen recovery only if a new, independently identifiable source becomes available.
