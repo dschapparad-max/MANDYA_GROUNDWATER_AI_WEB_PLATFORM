@@ -23,6 +23,10 @@ def claims():
             "candidate_d8_promoted",
             False
         ),
+        "groundwater_flow_validation": deployment.get(
+            "groundwater_flow_validation",
+            False
+        ),
         "scientific_mutation": deployment.get(
             "scientific_mutation",
             False

@@ -28,7 +28,9 @@ Returns frozen artifact checksums and provenance information.
 
 GET /api/claims
 
-Returns publication-safe claim status.
+Returns publication-safe claim status, including:
+
+- `groundwater_flow_validation` (boolean; false while independent groundwater-flow validation has not been established).
 
 GET /api/zones
 
