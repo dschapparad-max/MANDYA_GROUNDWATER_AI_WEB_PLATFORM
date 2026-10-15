@@ -386,3 +386,43 @@
 .village-search-panel .village-selected-details {
   flex-shrink: 0;
 }
+
+
+/* 10X responsive override: village panel */
+@media (max-width: 768px) {
+  .leaflet-container .village-search-panel {
+    top: auto;
+    bottom: 14px;
+    left: 10px;
+    right: auto;
+    width: min(280px, calc(100% - 20px));
+    max-width: calc(100% - 20px);
+    max-height: min(310px, 43%);
+    padding: 11px;
+    gap: 8px;
+  }
+
+  .leaflet-container .village-search-results {
+    max-height: 105px;
+  }
+
+  .leaflet-container .village-search-footer {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 420px) {
+  .leaflet-container .village-search-panel {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    max-height: 38%;
+  }
+
+  .leaflet-container .village-search-heading h3 {
+    font-size: 13px;
+  }
+
+  .leaflet-container .village-selected-details {
+    padding: 8px;
+  }
+}

@@ -141,3 +141,31 @@ footer {
   padding-top: 20px;
   color: #596579;
 }
+
+
+/* 10X narrow-screen layout */
+@media (max-width: 480px) {
+  .page {
+    width: calc(100% - 20px);
+    padding-top: 16px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .scientific-banner,
+  .panel,
+  .warning {
+    padding: 14px;
+  }
+
+  pre {
+    overflow-wrap: anywhere;
+  }
+}

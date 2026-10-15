@@ -140,23 +140,6 @@ export default function VillageSearch() {
       className="village-search-panel"
       aria-label="Mandya village search"
       style={{
-        position: "absolute",
-        top: "270px",
-        left: "14px",
-        right: "auto",
-        bottom: "auto",
-        zIndex: 2000,
-        display: "flex",
-        flexDirection: "column",
-        gap: "7px",
-        width: "310px",
-        minWidth: 0,
-        maxWidth: "calc(100% - 28px)",
-        height: "auto",
-        maxHeight: "280px",
-        overflowY: "auto",
-        boxSizing: "border-box",
-        padding: "10px",
         color: "#172033",
         background: "rgba(255,255,255,0.98)",
         border: "1px solid #dbe2ea",
