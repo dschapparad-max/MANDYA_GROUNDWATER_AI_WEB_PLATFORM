@@ -48,6 +48,9 @@ class RasterQueryApiTests(unittest.TestCase):
         self.assertIn("CNN-GRU predicted recharge index", body["results"])
         self.assertIn("not direct measurements", body["interpretation"])
         self.assertIn("field investigation", body["disclaimer"])
+        self.assertIn("percentile boundaries", body["disclaimer"])
+        self.assertIn("ordinal direction", body["disclaimer"])
+        self.assertIn("borewell-suitability ranking", body["disclaimer"])
         self.assertEqual(sampler.call_count, 4)
 
     def test_invalid_coordinates_return_422_without_sampling(self):

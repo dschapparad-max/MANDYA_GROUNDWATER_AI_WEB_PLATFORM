@@ -48,6 +48,9 @@ def query_location(
         ),
         "disclaimer": (
             "Decision-support information only. Borewell siting requires "
-            "field investigation and compliance with applicable regulations."
+            "field investigation and compliance with applicable regulations. "
+            "The five-zone output is a numeric class; percentile boundaries "
+            "and ordinal direction are not verified. Do not interpret the "
+            "class number as a borewell-suitability ranking."
         ),
     }
