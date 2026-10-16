@@ -150,15 +150,16 @@ function App() {
           <h2>Recharge Zones</h2>
 
           <p>
-            Five-zone decision-support classification:
+            XGBoost-derived five-class recharge-index map:
           </p>
+          <p className="scientific-warning">Class boundaries and class direction are not independently verified. Class numbers are not borewell-suitability rankings.</p>
 
           <ol>
-            <li>Zone 1</li>
-            <li>Zone 2</li>
-            <li>Zone 3</li>
-            <li>Zone 4</li>
-            <li>Zone 5</li>
+            <li>Class 1</li>
+            <li>Class 2</li>
+            <li>Class 3</li>
+            <li>Class 4</li>
+            <li>Class 5</li>
           </ol>
 
           {zones?.description && (

@@ -1,0 +1,25 @@
+{
+  "layer_id": "FLOW_ACCUMULATION_D8",
+  "display_name": "D8 Terrain-Derived Flow Accumulation",
+  "status": "DERIVED_TERRAIN_HYDROLOGY",
+  "web_role": "OPTIONAL_DIAGNOSTIC_ONLY",
+  "crs": "EPSG:32643",
+  "tile_crs": "EPSG:3857",
+  "resolution_m": 30.0,
+  "bounds": {
+    "west": 76.3283061163817,
+    "south": 12.216522330944494,
+    "east": 77.34012215608182,
+    "north": 13.056106646023306
+  },
+  "source_artifact": "SECTION8D_D8_flow_accumulation_cells.tif",
+  "source_sha256": "0daa4f4cbf9e84a42cab20e41c981b8ffe9604759da0668f7399a03c9d4ff905",
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "tile_count": 2525,
+  "scientific_warning": "DEM-derived topographic hydrology only. This layer is not direct measurement or independent validation of groundwater flow.",
+  "value_type": "upstream_contributing_cell_count",
+  "nodata": -9999.0,
+  "display_transform": "log1p(value) normalized to log1p(3124)",
+  "source_max_value": 3124.0
+}

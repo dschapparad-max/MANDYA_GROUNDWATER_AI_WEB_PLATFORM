@@ -1,0 +1,80 @@
+{
+  "layer_id": "FLOW_DIRECTION_D8",
+  "display_name": "D8 Terrain-Derived Flow Direction Codes",
+  "status": "DERIVED_TERRAIN_HYDROLOGY",
+  "web_role": "OPTIONAL_DIAGNOSTIC_ONLY",
+  "crs": "EPSG:32643",
+  "tile_crs": "EPSG:3857",
+  "resolution_m": 30.0,
+  "bounds": {
+    "west": 76.3283061163817,
+    "south": 12.216522330944494,
+    "east": 77.34012215608182,
+    "north": 13.056106646023306
+  },
+  "source_artifact": "SECTION8C_D8_flow_direction.tif",
+  "source_sha256": "3fe201dd21f6d5e381fc8763ab057393650ae7ee42aa95d1b0cee11075a318ba",
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "tile_count": 2525,
+  "scientific_warning": "DEM-derived topographic hydrology only. This layer is not direct measurement or independent validation of groundwater flow.",
+  "value_type": "categorical_d8_code",
+  "nodata": 255,
+  "display_codes": {
+    "0": [
+      125,
+      125,
+      125,
+      190
+    ],
+    "1": [
+      215,
+      48,
+      39,
+      220
+    ],
+    "2": [
+      252,
+      141,
+      89,
+      220
+    ],
+    "4": [
+      254,
+      224,
+      139,
+      220
+    ],
+    "8": [
+      145,
+      207,
+      96,
+      220
+    ],
+    "16": [
+      26,
+      152,
+      80,
+      220
+    ],
+    "32": [
+      44,
+      123,
+      182,
+      220
+    ],
+    "64": [
+      117,
+      107,
+      177,
+      220
+    ],
+    "128": [
+      231,
+      41,
+      138,
+      220
+    ]
+  },
+  "code_interpretation": "Numeric D8 codes are shown; compass mapping has not been asserted by this tile-generation step."
+}

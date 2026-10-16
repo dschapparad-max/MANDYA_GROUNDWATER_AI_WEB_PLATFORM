@@ -31,12 +31,18 @@ const CNN_GRU_TILE_URL = "/map-tiles/cnn-gru/{z}/{x}/{y}.png";
 
 const D8_METADATA_URL = "/map-tiles/d8-candidate-v2/metadata.json";
 const D8_TILE_URL = "/map-tiles/d8-candidate-v2/{z}/{x}/{y}.png";
+const FLOW_DIRECTION_METADATA_URL = "/map-tiles/flow-direction/metadata.json";
+const FLOW_DIRECTION_TILE_URL = "/map-tiles/flow-direction/{z}/{x}/{y}.png";
+const FLOW_ACCUMULATION_METADATA_URL = "/map-tiles/flow-accumulation/metadata.json";
+const FLOW_ACCUMULATION_TILE_URL = "/map-tiles/flow-accumulation/{z}/{x}/{y}.png";
 
 const EXPECTED_FAHP_LAYER_ID = "FAHP_RECHARGE_INDEX";
 const EXPECTED_XGBOOST_LAYER_ID = "XGBOOST_RECHARGE_PREDICTION";
 const EXPECTED_XGBOOST_ZONES_LAYER_ID = "XGBOOST_FIVE_RECHARGE_ZONES";
 const EXPECTED_CNN_GRU_LAYER_ID = "CNN_GRU_RECHARGE_PREDICTION";
 const EXPECTED_D8_LAYER_ID = "D8_CANDIDATE_PATHWAY_DIAGNOSTIC";
+const EXPECTED_FLOW_DIRECTION_LAYER_ID = "FLOW_DIRECTION_D8";
+const EXPECTED_FLOW_ACCUMULATION_LAYER_ID = "FLOW_ACCUMULATION_D8";
 
 const DEFAULT_CENTER = [12.636, 76.834];
 const DEFAULT_ZOOM = 9;
@@ -137,11 +143,15 @@ function ScientificRasterLayers({
   showXgboostZones,
   showCnnGru,
   showD8Candidate,
+  showFlowDirection,
+  showFlowAccumulation,
   fahpMetadata,
   xgboostMetadata,
   xgboostZonesMetadata,
   cnnGruMetadata,
   d8Metadata,
+  flowDirectionMetadata,
+  flowAccumulationMetadata,
   onVillageSelect,
 }) {
   const map = useMap();
@@ -196,6 +206,22 @@ function ScientificRasterLayers({
       url: D8_TILE_URL,
       opacity: 1.0,
       label: "Candidate D8 pathways",
+    },
+    {
+      id: "flow-direction",
+      visible: showFlowDirection,
+      metadata: flowDirectionMetadata,
+      url: FLOW_DIRECTION_TILE_URL,
+      opacity: 0.62,
+      label: "D8 flow direction codes",
+    },
+    {
+      id: "flow-accumulation",
+      visible: showFlowAccumulation,
+      metadata: flowAccumulationMetadata,
+      url: FLOW_ACCUMULATION_TILE_URL,
+      opacity: 0.62,
+      label: "D8 flow accumulation",
     },
   ];
 
@@ -263,6 +289,10 @@ function ScientificLayerControl({
   setShowCnnGru,
   showD8Candidate,
   setShowD8Candidate,
+  showFlowDirection,
+  setShowFlowDirection,
+  showFlowAccumulation,
+  setShowFlowAccumulation,
 }) {
   const controls = [
     ["FAHP Recharge Index", showFahp, setShowFahp],
@@ -308,6 +338,9 @@ function ScientificLayerControl({
                 setShowXgboost(label === "XGBoost Prediction");
                 setShowXgboostZones(label === "XGBoost Recharge Zones");
                 setShowCnnGru(label === "CNN-GRU Recharge Prediction");
+                setShowD8Candidate(false);
+                setShowFlowDirection(false);
+                setShowFlowAccumulation(false);
               } else {
                 setChecked(false);
               }
@@ -329,9 +362,54 @@ function ScientificLayerControl({
         <input
           type="checkbox"
           checked={showD8Candidate}
-          onChange={(event) => setShowD8Candidate(event.target.checked)}
+          onChange={(event) => {
+            const enabled = event.target.checked;
+            setShowD8Candidate(enabled);
+            if (enabled) {
+              setShowFahp(false);
+              setShowXgboost(false);
+              setShowXgboostZones(false);
+              setShowCnnGru(false);
+              setShowFlowDirection(false);
+              setShowFlowAccumulation(false);
+            }
+          }}
         />
         <span>Candidate D8 pathways (diagnostic)</span>
+      </label>
+
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7, cursor: "pointer" }}>
+        <input type="checkbox" checked={showFlowDirection}
+          onChange={(event) => {
+            const enabled = event.target.checked;
+            setShowFlowDirection(enabled);
+            if (enabled) {
+              setShowFahp(false);
+              setShowXgboost(false);
+              setShowXgboostZones(false);
+              setShowCnnGru(false);
+              setShowD8Candidate(false);
+              setShowFlowAccumulation(false);
+            }
+          }} />
+        <span>D8 flow direction codes (terrain-derived)</span>
+      </label>
+
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7, cursor: "pointer" }}>
+        <input type="checkbox" checked={showFlowAccumulation}
+          onChange={(event) => {
+            const enabled = event.target.checked;
+            setShowFlowAccumulation(enabled);
+            if (enabled) {
+              setShowFahp(false);
+              setShowXgboost(false);
+              setShowXgboostZones(false);
+              setShowCnnGru(false);
+              setShowD8Candidate(false);
+              setShowFlowDirection(false);
+            }
+          }} />
+        <span>D8 flow accumulation (terrain-derived)</span>
       </label>
 
       <div
@@ -391,17 +469,17 @@ function XgboostZonesLegend({ metadata }) {
   if (!metadata) return null;
 
   const zones = [
-    ["1", "Very Low", "rgb(215,48,39)"],
-    ["2", "Low", "rgb(252,141,89)"],
-    ["3", "Moderate", "rgb(254,224,139)"],
-    ["4", "High", "rgb(145,207,96)"],
-    ["5", "Very High", "rgb(26,152,80)"],
+    ["1", "Class 1", "rgb(215,48,39)"],
+    ["2", "Class 2", "rgb(252,141,89)"],
+    ["3", "Class 3", "rgb(254,224,139)"],
+    ["4", "Class 4", "rgb(145,207,96)"],
+    ["5", "Class 5", "rgb(26,152,80)"],
   ];
 
   return (
     <div className="gw-legend-card">
       <div style={{ fontWeight: 750, marginBottom: 7 }}>
-        XGBoost Recharge Potential Zones
+        XGBoost Recharge-Index Classes
       </div>
 
       {zones.map(([zone, label, color]) => (
@@ -431,8 +509,7 @@ function XgboostZonesLegend({ metadata }) {
       ))}
 
       <div style={{ marginTop: 5, fontSize: 10, color: "#666" }}>
-        Frozen five percentile-based spatial zones from the final XGBoost
-        prediction.
+        Five percentile-based classes from the XGBoost recharge-index prediction. Class boundaries and class direction are not independently verified for hydrogeologic suitability. Class numbers and display colors are not borewell-suitability rankings.
       </div>
     </div>
   );
@@ -448,6 +525,8 @@ function ScientificLegend({
   showXgboostZones,
   showCnnGru,
   showD8Candidate,
+  showFlowDirection,
+  showFlowAccumulation,
   fahpMetadata,
   xgboostMetadata,
   xgboostZonesMetadata,
@@ -459,6 +538,8 @@ function ScientificLegend({
     showXgboostZones,
     showCnnGru,
     showD8Candidate,
+    showFlowDirection,
+    showFlowAccumulation,
   ].filter(Boolean).length;
 
   if (visibleCount === 0) return null;
@@ -526,6 +607,40 @@ function ScientificLegend({
           </div>
         </div>
       )}
+
+      {showFlowDirection && (
+        <div className="gw-legend-card">
+          <div style={{ fontWeight: 750, marginBottom: 5 }}>D8 Flow Direction Codes</div>
+          {[
+            [0, "rgb(125,125,125)"], [1, "rgb(215,48,39)"],
+            [2, "rgb(252,141,89)"], [4, "rgb(254,224,139)"],
+            [8, "rgb(145,207,96)"], [16, "rgb(26,152,80)"],
+            [32, "rgb(44,123,182)"], [64, "rgb(117,107,177)"],
+            [128, "rgb(231,41,138)"],
+          ].map(([code, color]) => (
+            <div key={code} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+              <span style={{ width: 16, height: 12, background: color, border: "1px solid rgba(0,0,0,0.2)", flex: "0 0 16px" }} />
+              <span>Code {code}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: 5, fontSize: 10, color: "#666" }}>
+            Terrain-derived codes only. Numeric codes are shown without asserting a compass convention or validated groundwater-flow direction.
+          </div>
+        </div>
+      )}
+
+      {showFlowAccumulation && (
+        <div className="gw-legend-card">
+          <div style={{ fontWeight: 750, marginBottom: 5 }}>D8 Flow Accumulation</div>
+          <div style={{ height: 12, border: "1px solid rgba(0,0,0,0.2)", background: "linear-gradient(to right, rgb(20,45,90), rgb(32,140,160), rgb(95,190,130), rgb(255,215,90), rgb(195,45,35))" }} />
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, marginTop: 4 }}>
+            <span>1 cell</span><span>3,124 cells</span>
+          </div>
+          <div style={{ marginTop: 5, fontSize: 10, color: "#666" }}>
+            Upstream contributing-cell count, shown on a logarithmic color scale. Terrain-derived hydrology, not measured groundwater discharge or recharge.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -540,6 +655,8 @@ function MapInterpretation({
   showXgboostZones,
   showCnnGru,
   showD8Candidate,
+  showFlowDirection,
+  showFlowAccumulation,
 }) {
   const descriptions = [
     showFahp && {
@@ -566,6 +683,16 @@ function MapInterpretation({
       id: "d8-candidate-v2",
       title: "D8 pathway diagnostic",
       text: "Versioned regenerated terrain-derived pathway mask. It is not independently validated groundwater flow.",
+    },
+    showFlowDirection && {
+      id: "flow-direction",
+      title: "D8 flow direction",
+      text: "DEM-derived direction codes for terrain drainage. These are not direct or independently validated groundwater-flow observations.",
+    },
+    showFlowAccumulation && {
+      id: "flow-accumulation",
+      title: "D8 flow accumulation",
+      text: "DEM-derived upstream contributing-cell counts. These are not measured groundwater discharge or recharge.",
     },
   ].filter(Boolean);
 
@@ -626,6 +753,8 @@ export default function GroundwaterMap() {
   const [xgboostZonesMetadata, setXgboostZonesMetadata] = useState(null);
   const [cnnGruMetadata, setCnnGruMetadata] = useState(null);
   const [d8Metadata, setD8Metadata] = useState(null);
+  const [flowDirectionMetadata, setFlowDirectionMetadata] = useState(null);
+  const [flowAccumulationMetadata, setFlowAccumulationMetadata] = useState(null);
   const [metadataError, setMetadataError] = useState(null);
 
   const [showFahp, setShowFahp] = useState(true);
@@ -633,6 +762,8 @@ export default function GroundwaterMap() {
   const [showXgboostZones, setShowXgboostZones] = useState(false);
   const [showCnnGru, setShowCnnGru] = useState(false);
   const [showD8Candidate, setShowD8Candidate] = useState(false);
+  const [showFlowDirection, setShowFlowDirection] = useState(false);
+  const [showFlowAccumulation, setShowFlowAccumulation] = useState(false);
 
   // Location query state. This samples the existing authoritative rasters only;
   // it does not run inference, modify outputs, or calculate a new suitability score.
@@ -856,7 +987,7 @@ export default function GroundwaterMap() {
 
     async function loadMetadata() {
       try {
-        const [fahp, xgboost, xgboostZones, cnnGru, d8Candidate] = await Promise.all([
+        const [fahp, xgboost, xgboostZones, cnnGru, d8Candidate, flowDirection, flowAccumulation] = await Promise.all([
           loadLayerMetadata(FAHP_METADATA_URL, EXPECTED_FAHP_LAYER_ID),
           loadLayerMetadata(
             XGBOOST_METADATA_URL,
@@ -877,6 +1008,20 @@ export default function GroundwaterMap() {
             console.warn("Optional D8 diagnostic layer unavailable:", error);
             return null;
           }),
+          loadLayerMetadata(
+            FLOW_DIRECTION_METADATA_URL,
+            EXPECTED_FLOW_DIRECTION_LAYER_ID
+          ).catch((error) => {
+            console.warn("Optional flow-direction layer unavailable:", error);
+            return null;
+          }),
+          loadLayerMetadata(
+            FLOW_ACCUMULATION_METADATA_URL,
+            EXPECTED_FLOW_ACCUMULATION_LAYER_ID
+          ).catch((error) => {
+            console.warn("Optional flow-accumulation layer unavailable:", error);
+            return null;
+          }),
         ]);
 
         if (cancelled) return;
@@ -886,6 +1031,8 @@ export default function GroundwaterMap() {
         setXgboostZonesMetadata(xgboostZones);
         setCnnGruMetadata(cnnGru);
         setD8Metadata(d8Candidate);
+        setFlowDirectionMetadata(flowDirection);
+        setFlowAccumulationMetadata(flowAccumulation);
         setMetadataError(null);
       } catch (error) {
         if (cancelled) return;
@@ -910,7 +1057,9 @@ export default function GroundwaterMap() {
       xgboostMetadata ||
       xgboostZonesMetadata ||
       cnnGruMetadata ||
-      d8Metadata;
+      d8Metadata ||
+      flowDirectionMetadata ||
+      flowAccumulationMetadata;
 
     return metadata?.bounds ?? null;
   }, [
@@ -919,6 +1068,8 @@ export default function GroundwaterMap() {
     xgboostZonesMetadata,
     cnnGruMetadata,
     d8Metadata,
+    flowDirectionMetadata,
+    flowAccumulationMetadata,
   ]);
 
   if (metadataError) {
@@ -999,11 +1150,15 @@ export default function GroundwaterMap() {
           showXgboostZones={showXgboostZones}
           showCnnGru={showCnnGru}
           showD8Candidate={showD8Candidate}
+          showFlowDirection={showFlowDirection}
+          showFlowAccumulation={showFlowAccumulation}
           fahpMetadata={fahpMetadata}
           xgboostMetadata={xgboostMetadata}
           xgboostZonesMetadata={xgboostZonesMetadata}
           cnnGruMetadata={cnnGruMetadata}
           d8Metadata={d8Metadata}
+          flowDirectionMetadata={flowDirectionMetadata}
+          flowAccumulationMetadata={flowAccumulationMetadata}
           onVillageSelect={handleVillageSelect}
         />
 
@@ -1252,7 +1407,11 @@ export default function GroundwaterMap() {
         showCnnGru={showCnnGru}
         setShowCnnGru={setShowCnnGru}
         showD8Candidate={showD8Candidate}
+          showFlowDirection={showFlowDirection}
+          showFlowAccumulation={showFlowAccumulation}
         setShowD8Candidate={setShowD8Candidate}
+        setShowFlowDirection={setShowFlowDirection}
+        setShowFlowAccumulation={setShowFlowAccumulation}
       />
 
       <MapInterpretation
@@ -1261,6 +1420,8 @@ export default function GroundwaterMap() {
         showXgboostZones={showXgboostZones}
         showCnnGru={showCnnGru}
         showD8Candidate={showD8Candidate}
+          showFlowDirection={showFlowDirection}
+          showFlowAccumulation={showFlowAccumulation}
       />
 
       <ScientificLegend
@@ -1269,6 +1430,8 @@ export default function GroundwaterMap() {
         showXgboostZones={showXgboostZones}
         showCnnGru={showCnnGru}
         showD8Candidate={showD8Candidate}
+          showFlowDirection={showFlowDirection}
+          showFlowAccumulation={showFlowAccumulation}
         fahpMetadata={fahpMetadata}
         xgboostMetadata={xgboostMetadata}
         xgboostZonesMetadata={xgboostZonesMetadata}
