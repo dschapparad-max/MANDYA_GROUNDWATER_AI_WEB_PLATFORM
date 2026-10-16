@@ -1,5 +1,5 @@
 import VillageSearch from "./VillageSearch";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
@@ -29,10 +29,14 @@ const XGBOOST_ZONES_TILE_URL =
 const CNN_GRU_METADATA_URL = "/map-tiles/cnn-gru/metadata.json";
 const CNN_GRU_TILE_URL = "/map-tiles/cnn-gru/{z}/{x}/{y}.png";
 
+const D8_METADATA_URL = "/map-tiles/d8-candidate-v2/metadata.json";
+const D8_TILE_URL = "/map-tiles/d8-candidate-v2/{z}/{x}/{y}.png";
+
 const EXPECTED_FAHP_LAYER_ID = "FAHP_RECHARGE_INDEX";
 const EXPECTED_XGBOOST_LAYER_ID = "XGBOOST_RECHARGE_PREDICTION";
 const EXPECTED_XGBOOST_ZONES_LAYER_ID = "XGBOOST_FIVE_RECHARGE_ZONES";
 const EXPECTED_CNN_GRU_LAYER_ID = "CNN_GRU_RECHARGE_PREDICTION";
+const EXPECTED_D8_LAYER_ID = "D8_CANDIDATE_PATHWAY_DIAGNOSTIC";
 
 const DEFAULT_CENTER = [12.636, 76.834];
 const DEFAULT_ZOOM = 9;
@@ -132,10 +136,13 @@ function ScientificRasterLayers({
   showXgboost,
   showXgboostZones,
   showCnnGru,
+  showD8Candidate,
   fahpMetadata,
   xgboostMetadata,
   xgboostZonesMetadata,
   cnnGruMetadata,
+  d8Metadata,
+  onVillageSelect,
 }) {
   const map = useMap();
   const paneName = "scientificRasterPane";
@@ -182,6 +189,14 @@ function ScientificRasterLayers({
       opacity: 0.72,
       label: "CNN-GRU",
     },
+    {
+      id: "d8-candidate-v2",
+      visible: showD8Candidate,
+      metadata: d8Metadata,
+      url: D8_TILE_URL,
+      opacity: 1.0,
+      label: "Candidate D8 pathways",
+    },
   ];
 
   
@@ -209,7 +224,7 @@ return (
         )
     )}
 
-    <VillageSearch />
+    <VillageSearch onVillageSelect={onVillageSelect} />
   </>
 );
 
@@ -246,6 +261,8 @@ function ScientificLayerControl({
   setShowXgboostZones,
   showCnnGru,
   setShowCnnGru,
+  showD8Candidate,
+  setShowD8Candidate,
 }) {
   const controls = [
     ["FAHP Recharge Index", showFahp, setShowFahp],
@@ -299,6 +316,23 @@ function ScientificLayerControl({
           <span>{label}</span>
         </label>
       ))}
+
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 7,
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={showD8Candidate}
+          onChange={(event) => setShowD8Candidate(event.target.checked)}
+        />
+        <span>Candidate D8 pathways (diagnostic)</span>
+      </label>
 
       <div
         style={{
@@ -413,6 +447,7 @@ function ScientificLegend({
   showXgboost,
   showXgboostZones,
   showCnnGru,
+  showD8Candidate,
   fahpMetadata,
   xgboostMetadata,
   xgboostZonesMetadata,
@@ -423,6 +458,7 @@ function ScientificLegend({
     showXgboost,
     showXgboostZones,
     showCnnGru,
+    showD8Candidate,
   ].filter(Boolean).length;
 
   if (visibleCount === 0) return null;
@@ -471,6 +507,25 @@ function ScientificLegend({
           metadata={cnnGruMetadata}
         />
       )}
+
+      {showD8Candidate && (
+        <div className="gw-legend-card">
+          <div style={{ fontWeight: 750, marginBottom: 5 }}>
+            Candidate D8 pathways
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <span style={{
+              display: "inline-block",
+              width: 18,
+              height: 12,
+              background: "rgb(255,128,0)",
+              border: "1px solid rgba(0,0,0,0.2)",
+              flex: "0 0 18px",
+            }} />
+            <span>Topographic diagnostic only; not validated groundwater flow.</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -484,6 +539,7 @@ function MapInterpretation({
   showXgboost,
   showXgboostZones,
   showCnnGru,
+  showD8Candidate,
 }) {
   const descriptions = [
     showFahp && {
@@ -505,6 +561,11 @@ function MapInterpretation({
       id: "cnn-gru",
       title: "CNN-GRU",
       text: "AI-based spatial prediction of the FAHP-derived groundwater recharge index using the frozen CNN-GRU model.",
+    },
+    showD8Candidate && {
+      id: "d8-candidate-v2",
+      title: "D8 pathway diagnostic",
+      text: "Versioned regenerated terrain-derived pathway mask. It is not independently validated groundwater flow.",
     },
   ].filter(Boolean);
 
@@ -564,12 +625,14 @@ export default function GroundwaterMap() {
   const [xgboostMetadata, setXgboostMetadata] = useState(null);
   const [xgboostZonesMetadata, setXgboostZonesMetadata] = useState(null);
   const [cnnGruMetadata, setCnnGruMetadata] = useState(null);
+  const [d8Metadata, setD8Metadata] = useState(null);
   const [metadataError, setMetadataError] = useState(null);
 
   const [showFahp, setShowFahp] = useState(true);
   const [showXgboost, setShowXgboost] = useState(false);
   const [showXgboostZones, setShowXgboostZones] = useState(false);
   const [showCnnGru, setShowCnnGru] = useState(false);
+  const [showD8Candidate, setShowD8Candidate] = useState(false);
 
   // Location query state. This samples the existing authoritative rasters only;
   // it does not run inference, modify outputs, or calculate a new suitability score.
@@ -579,6 +642,23 @@ export default function GroundwaterMap() {
   const [queryResult, setQueryResult] = useState(null);
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryError, setQueryError] = useState(null);
+  const [selectedVillage, setSelectedVillage] = useState(null);
+  const farmerPanelRef = useRef(null);
+
+  useEffect(() => {
+    if (farmerPanelRef.current) {
+      farmerPanelRef.current.scrollTop = 0;
+    }
+  }, [selectedVillage, queryResult, queryError, queryLoading]);
+
+  const handleVillageSelect = useCallback((village) => {
+    setSelectedVillage(village);
+    setSelectedLocation(null);
+    setQueryResult(null);
+    setQueryError(null);
+    setLatitudeInput("");
+    setLongitudeInput("");
+  }, []);
 
   async function queryLocation(latitude, longitude) {
     if (String(latitude).trim() === "" || String(longitude).trim() === "") {
@@ -776,7 +856,7 @@ export default function GroundwaterMap() {
 
     async function loadMetadata() {
       try {
-        const [fahp, xgboost, xgboostZones, cnnGru] = await Promise.all([
+        const [fahp, xgboost, xgboostZones, cnnGru, d8Candidate] = await Promise.all([
           loadLayerMetadata(FAHP_METADATA_URL, EXPECTED_FAHP_LAYER_ID),
           loadLayerMetadata(
             XGBOOST_METADATA_URL,
@@ -790,6 +870,13 @@ export default function GroundwaterMap() {
             CNN_GRU_METADATA_URL,
             EXPECTED_CNN_GRU_LAYER_ID
           ),
+          loadLayerMetadata(
+            D8_METADATA_URL,
+            EXPECTED_D8_LAYER_ID
+          ).catch((error) => {
+            console.warn("Optional D8 diagnostic layer unavailable:", error);
+            return null;
+          }),
         ]);
 
         if (cancelled) return;
@@ -798,6 +885,7 @@ export default function GroundwaterMap() {
         setXgboostMetadata(xgboost);
         setXgboostZonesMetadata(xgboostZones);
         setCnnGruMetadata(cnnGru);
+        setD8Metadata(d8Candidate);
         setMetadataError(null);
       } catch (error) {
         if (cancelled) return;
@@ -821,7 +909,8 @@ export default function GroundwaterMap() {
       fahpMetadata ||
       xgboostMetadata ||
       xgboostZonesMetadata ||
-      cnnGruMetadata;
+      cnnGruMetadata ||
+      d8Metadata;
 
     return metadata?.bounds ?? null;
   }, [
@@ -829,6 +918,7 @@ export default function GroundwaterMap() {
     xgboostMetadata,
     xgboostZonesMetadata,
     cnnGruMetadata,
+    d8Metadata,
   ]);
 
   if (metadataError) {
@@ -908,10 +998,13 @@ export default function GroundwaterMap() {
           showXgboost={showXgboost}
           showXgboostZones={showXgboostZones}
           showCnnGru={showCnnGru}
+          showD8Candidate={showD8Candidate}
           fahpMetadata={fahpMetadata}
           xgboostMetadata={xgboostMetadata}
           xgboostZonesMetadata={xgboostZonesMetadata}
           cnnGruMetadata={cnnGruMetadata}
+          d8Metadata={d8Metadata}
+          onVillageSelect={handleVillageSelect}
         />
 
         <MapExtentController
@@ -921,24 +1014,51 @@ export default function GroundwaterMap() {
       </MapContainer>
 
       <div
+        ref={farmerPanelRef}
         className="gw-query-panel"
         role="region"
         aria-label="Location-based recharge query"
         style={{
           ...panelStyle,
           zIndex: 1100,
-          right: 12,
-          top: "42%",
-          width: "min(300px, calc(100% - 24px))",
-          maxHeight: "38%",
+          right: "auto",
+          left: "35%",
+          top: "31%",
+          width: "min(340px, calc(100% - 24px))",
+          maxHeight: "52%",
           overflowY: "auto",
           padding: 12,
         }}
       >
-        <strong>Location query</strong>
+        <strong>Farmer decision support</strong>
         <p style={{ margin: "6px 0" }}>
-          Click the map or enter latitude and longitude (WGS84).
+          Select a village for reference, then click the exact farm or proposed
+          well location on the map, or enter its WGS84 coordinates.
         </p>
+
+        {selectedVillage && (
+          <div style={{
+            margin: "8px 0",
+            padding: "8px",
+            borderRadius: 6,
+            border: "1px solid #dbe2ea",
+            background: "#f8fafc",
+          }}>
+            <strong>Village reference: {selectedVillage.name}</strong>
+            <div>LGD code: {selectedVillage.id || "Unavailable"}</div>
+            <small>
+              Boundary reference only. Values below apply to the sampled
+              coordinate, not to the entire village.
+            </small>
+          </div>
+        )}
+
+        {selectedVillage && !selectedLocation && (
+          <p role="status" style={{ margin: "6px 0", color: "#475569" }}>
+            No site values have been sampled yet. Click the proposed farm
+            location on the map or enter its coordinates.
+          </p>
+        )}
 
         <form
           onSubmit={(event) => {
@@ -999,48 +1119,127 @@ export default function GroundwaterMap() {
           </button>
         </form>
 
+        <details style={{
+          marginTop: 10,
+          padding: "8px",
+          border: "1px solid #dbe2ea",
+          borderRadius: 7,
+          background: "#f8fafc",
+          fontSize: 12,
+        }}>
+          <summary style={{ cursor: "pointer", fontWeight: 700 }}>
+            Before drilling: field-check checklist
+          </summary>
+          <ol style={{ paddingLeft: 20, marginBottom: 4 }}>
+            <li>
+              Arrange a site-specific hydrogeological assessment and, where
+              appropriate, a qualified geophysical survey.
+            </li>
+            <li>
+              Verify seasonal groundwater levels, nearby well performance,
+              local geology and groundwater use with qualified local personnel.
+            </li>
+            <li>
+              Check water-quality requirements and applicable borewell and
+              groundwater-extraction permissions with competent authorities.
+            </li>
+          </ol>
+          <p style={{ marginBottom: 0 }}>
+            Do not decide to drill from map colour or a modelled index alone.
+          </p>
+        </details>
+
         {queryError && (
           <p role="alert" style={{ color: "#a61b1b", marginBottom: 0 }}>
             {queryError}
           </p>
         )}
 
-        {queryResult && (
-          <div style={{ marginTop: 10 }} aria-live="polite">
-            <strong>Results for selected location</strong>
-            {Object.entries(queryResult.results).map(([label, item]) => (
-              <div
-                key={label}
-                style={{
-                  borderTop: "1px solid #ddd",
-                  padding: "6px 0",
-                  overflowWrap: "anywhere",
-                }}
-              >
-                <strong>{label}</strong>
-                <br />
-                {item.status === "ok"
-                  ? item.value
-                  : item.status === "nodata"
-                    ? "NoData at this location"
-                    : item.status === "outside_coverage"
-                      ? "Outside raster coverage"
-                      : "Value unavailable"}
-              </div>
-            ))}
+        {queryResult && (() => {
+          const entries = Object.entries(queryResult.results ?? {});
+          const availableCount = entries.filter(
+            ([, item]) =>
+              item?.status === "ok" &&
+              item.value !== null &&
+              item.value !== undefined
+          ).length;
 
-            {queryResult.interpretation && (
-              <p style={{ fontSize: 10, color: "#555" }}>
-                {queryResult.interpretation}
+          return (
+            <div style={{ marginTop: 10 }} aria-live="polite">
+              <div style={{
+                padding: "9px",
+                border: "1px solid #cbd5e1",
+                borderRadius: 7,
+                background: "#f8fafc",
+              }}>
+                <strong>Location sample summary</strong>
+                <p style={{ margin: "5px 0" }}>
+                  Latitude: {Number(queryResult.coordinates?.latitude).toFixed(6)}
+                  <br />
+                  Longitude: {Number(queryResult.coordinates?.longitude).toFixed(6)}
+                </p>
+                <p style={{ margin: "5px 0" }}>
+                  Raster values available: <strong>{availableCount} of {entries.length}</strong>
+                </p>
+                <p style={{ margin: "5px 0 0", fontSize: 11 }}>
+                  These are modelled recharge-index values and spatial classes,
+                  not measured groundwater levels, guaranteed well yield,
+                  water quality or calibrated recharge probabilities.
+                </p>
+              </div>
+
+              <details style={{ marginTop: 8, padding: "7px 0" }}>
+                <summary style={{ cursor: "pointer", fontWeight: 700 }}>
+                  View sampled raster values
+                </summary>
+                {entries.map(([label, item]) => (
+                  <div
+                    key={label}
+                    style={{
+                      borderTop: "1px solid #ddd",
+                      padding: "6px 0",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    <strong>{label}</strong>
+                    <br />
+                    {item.status === "ok"
+                      ? (typeof item.value === "number"
+                          ? item.value.toLocaleString("en-IN", {
+                              maximumFractionDigits: 6,
+                            })
+                          : String(item.value))
+                      : item.status === "nodata"
+                        ? "No data at this location"
+                        : item.status === "outside_coverage"
+                          ? "Outside raster coverage"
+                          : "Value unavailable"}
+                  </div>
+                ))}
+
+                {queryResult.interpretation && (
+                  <p style={{ fontSize: 11, color: "#475569" }}>
+                    {queryResult.interpretation}
+                  </p>
+                )}
+                {queryResult.disclaimer && (
+                  <p style={{ fontSize: 11, color: "#475569" }}>
+                    {queryResult.disclaimer}
+                  </p>
+                )}
+              </details>
+
+              <p style={{
+                margin: "7px 0 0",
+                fontSize: 11,
+                color: "#7c2d12",
+              }}>
+                This panel does not generate a borewell-suitability ranking or
+                drilling recommendation. Confirm site conditions in the field.
               </p>
-            )}
-            {queryResult.disclaimer && (
-              <p style={{ fontSize: 10, color: "#555" }}>
-                {queryResult.disclaimer}
-              </p>
-            )}
-          </div>
-        )}
+            </div>
+          );
+        })()}
       </div>
 
       <ScientificLayerControl
@@ -1052,6 +1251,8 @@ export default function GroundwaterMap() {
         setShowXgboostZones={setShowXgboostZones}
         showCnnGru={showCnnGru}
         setShowCnnGru={setShowCnnGru}
+        showD8Candidate={showD8Candidate}
+        setShowD8Candidate={setShowD8Candidate}
       />
 
       <MapInterpretation
@@ -1059,6 +1260,7 @@ export default function GroundwaterMap() {
         showXgboost={showXgboost}
         showXgboostZones={showXgboostZones}
         showCnnGru={showCnnGru}
+        showD8Candidate={showD8Candidate}
       />
 
       <ScientificLegend
@@ -1066,6 +1268,7 @@ export default function GroundwaterMap() {
         showXgboost={showXgboost}
         showXgboostZones={showXgboostZones}
         showCnnGru={showCnnGru}
+        showD8Candidate={showD8Candidate}
         fahpMetadata={fahpMetadata}
         xgboostMetadata={xgboostMetadata}
         xgboostZonesMetadata={xgboostZonesMetadata}

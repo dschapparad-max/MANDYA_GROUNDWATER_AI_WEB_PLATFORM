@@ -53,7 +53,12 @@
       "crs": "EPSG:32643",
       "resolution_m": 30.0,
       "value_type": "candidate_flow_pathway",
-      "description": "Candidate D8-derived raster-topological pathway diagnostic. It is not the recovered authoritative Section 8 groundwater-flow product."
+      "description": "Versioned regenerated D8-derived topographic pathway diagnostic, threshold >=12 cells. Not the frozen legacy Section 38R pathway and not direct groundwater-flow validation.",
+      "source_artifact": "SECTION8E_primary_flow_pathways_v2_20261016.tif",
+      "source_sha256": "126b9a74f913df8e6f384d4008dde3297a9352830a029ad1d1093c0ed892914f",
+      "pathway_cells": 575592,
+      "threshold_cells": 12,
+      "version": "SECTION8E_V2_REGENERATION_20261016"
     }
   ],
   "scientific_target": "FAHP-derived groundwater recharge index",

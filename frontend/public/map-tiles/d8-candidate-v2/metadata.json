@@ -1,0 +1,26 @@
+{
+  "layer_id": "D8_CANDIDATE_PATHWAY_DIAGNOSTIC",
+  "display_name": "Candidate D8 Topographic Flow-Pathway Diagnostic (v2 regeneration)",
+  "status": "NON_AUTHORITATIVE_CANDIDATE",
+  "web_role": "DIAGNOSTIC_ONLY",
+  "crs": "EPSG:32643",
+  "tile_crs": "EPSG:3857",
+  "resolution_m": 30.0,
+  "min": 0,
+  "max": 1,
+  "bounds": {
+    "west": 76.3283061163817,
+    "south": 12.216522330944494,
+    "east": 77.34012215608182,
+    "north": 13.056106646023306
+  },
+  "pathway_cells": 575592,
+  "threshold_cells": 12,
+  "source_sha256": "126b9a74f913df8e6f384d4008dde3297a9352830a029ad1d1093c0ed892914f",
+  "source_artifact": "SECTION8E_primary_flow_pathways_v2_20261016.tif",
+  "lineage_note": "This is the versioned Section 8E v2 regeneration, not the frozen legacy Section 38R pathway. 289 v2 pathway cells fall outside valid CNN-GRU coverage in the recorded lineage comparison.",
+  "scientific_warning": "Terrain-derived D8 pathway diagnostic only. It is not independently validated groundwater flow.",
+  "min_zoom": 8,
+  "max_zoom": 14,
+  "tile_count": 2525
+}

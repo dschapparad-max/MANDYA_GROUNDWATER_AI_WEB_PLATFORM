@@ -8,7 +8,7 @@ const DATA_URL = "/data/mandya_villages.geojson";
 const EXPECTED_FEATURE_COUNT = 1484;
 const MAX_RESULTS = 8;
 
-export default function VillageSearch() {
+export default function VillageSearch({ onVillageSelect }) {
   const map = useMap();
 
   const [data, setData] = useState(null);
@@ -27,6 +27,7 @@ export default function VillageSearch() {
       );
 
       setSelected({ id, name });
+      onVillageSelect?.({ id, name });
       setSearch("");
       setError("");
 
@@ -41,7 +42,7 @@ export default function VillageSearch() {
         });
       }
     },
-    [map]
+    [map, onVillageSelect]
   );
 
   // Load village boundaries.
