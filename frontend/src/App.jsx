@@ -152,7 +152,7 @@ function App() {
           <p>
             XGBoost-derived five-class recharge-index map:
           </p>
-          <p className="scientific-warning">Class boundaries and class direction are not independently verified. Class numbers are not borewell-suitability rankings.</p>
+          <p className="scientific-warning">Zones are equal-frequency percentile classes of the XGBoost recharge-index prediction, ordered from Zone 1 (lowest index) to Zone 5 (highest index). They are not independently validated recharge-suitability or borewell-siting rankings.</p>
 
           <ol>
             <li>Class 1</li>

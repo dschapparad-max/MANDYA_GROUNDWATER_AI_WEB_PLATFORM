@@ -509,7 +509,7 @@ function XgboostZonesLegend({ metadata }) {
       ))}
 
       <div style={{ marginTop: 5, fontSize: 10, color: "#666" }}>
-        Five percentile-based classes from the XGBoost recharge-index prediction. Class boundaries and class direction are not independently verified for hydrogeologic suitability. Class numbers and display colors are not borewell-suitability rankings.
+        Five equal-frequency percentile classes of the XGBoost recharge-index prediction. The raster audit confirms that Zone 1 has the lowest index and Zone 5 the highest. These index classes are not independently validated as hydrogeologic recharge-suitability or borewell-siting classes.
       </div>
     </div>
   );
