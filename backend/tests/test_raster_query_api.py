@@ -93,9 +93,11 @@ class RasterQueryApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(body["classes"], [1, 2, 3, 4, 5])
-        self.assertIn("does not define their percentile boundaries", body["description"])
-        self.assertIn("ordinal direction", body["description"])
-        self.assertIn("borewell-suitability ranking", body["description"])
+        self.assertIn("approximately equal-frequency percentile classes", body["description"])
+        self.assertIn("Zone 1 has the lowest index", body["description"])
+        self.assertIn("Zone 5 has the highest", body["description"])
+        self.assertIn("not independently validated for hydrogeologic recharge suitability", body["description"])
+        self.assertIn("borewell siting", body["description"])
     def test_configured_local_frontend_origin_is_allowed(self):
         response = self.client.get(
             "/health",

@@ -11,9 +11,9 @@ def zones():
         "type": "categorical_zone",
         "classes": [1, 2, 3, 4, 5],
         "description":
-            "Five percentile-based spatial classes derived from the final "
-            "XGBoost recharge-index prediction. The available metadata "
-            "confirms classes 1-5 but does not define their percentile "
-            "boundaries or ordinal direction. Do not treat the numeric "
-            "class as a verified borewell-suitability ranking.",
+            "Five approximately equal-frequency percentile classes derived from the final "
+            "XGBoost recharge-index prediction. Zone 1 has the lowest index values and "
+            "Zone 5 has the highest. The classes describe relative index rank only; they "
+            "are not independently validated for hydrogeologic recharge suitability or "
+            "borewell siting.",
     }
