@@ -124,3 +124,21 @@ The current evidence does not establish predictive accuracy for actual groundwat
 **Borewell-siting recommendation validated by these observations: no.**
 
 This report records exploratory findings and limitations. It does not change model outputs or promote any diagnostic layer to authoritative groundwater-flow status.
+
+## 9. Complementary May-to-November analysis
+
+A complementary analysis compared May and November groundwater depth-to-water observations where both months were available for the same station and year.
+
+- Matched station-year pairs: 74.
+- Unique monitoring stations: 47.
+- Mean November-minus-May depth change: -0.0695 m.
+- Water became shallower: 40 pairs.
+- Water became deeper: 34 pairs.
+- Station-averaged Pearson correlation with the XGBoost index: 0.0288; p-value: 0.8477.
+- Station-averaged Spearman correlation: -0.1063; p-value: 0.4771.
+
+The station-level correlations were calculated after averaging available May-to-November changes within each station. Both correlations are close to zero and neither is statistically significant at the 0.05 level. Confidence intervals were not calculated for this complementary analysis.
+
+These results provide no detectable association between the sampled XGBoost index and May-to-November depth changes under this analysis. They do not prove the absence of a relationship with recharge. Groundwater levels reflect multiple influences, including rainfall, abstraction, geology and local storage; these influences were not adjusted for here.
+
+Groundwater-level change remains an indirect and incomplete proxy for recharge. This analysis does not calibrate the index as a probability, validate the five zones as recharge-suitability classes, or establish borewell-siting suitability.
