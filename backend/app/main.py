@@ -26,6 +26,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "https://mandya-groundwater-ai-web.onrender.com",
     ],
     allow_credentials=False,
     allow_methods=["GET"],
