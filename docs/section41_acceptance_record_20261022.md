@@ -145,5 +145,11 @@ Scientific limitation: Modelled recharge indices are not direct groundwater meas
 Modelled recharge indices are not measured groundwater recharge. D8 terrain routing does not establish underground flow direction. Borewell decisions require independent field and hydrogeological assessment.
 
 Conclusion: Software deployment and the listed functional checks passed. Scientific validation, full security sign-off, and farmer pilot completion are not yet certified.
+**Project Implementation and Acceptance Status**
 
+The Mandya District Groundwater AI Decision-Support Platform has been deployed successfully. The reported live checks returned HTTP 200 for backend health, API metadata, and the frontend. Backend automated tests passed (15 tests and 4 subtests), the frontend dependency audit reported zero vulnerabilities, and the map layers, village search, and farmer advisory passed functional checks.
+
+Independent groundwater and flow validation, full production security review, and farmer pilot evaluation remain pending. The recharge index represents a modelled estimate rather than a direct groundwater measurement, and D8 terrain routing does not independently establish underground flow direction. Borewell decisions require appropriate field investigation and hydrogeological assessment.
+
+**Conclusion:** Software deployment and reported functional verification are complete. Scientific validation and final operational sign-off remain subject to independent evidence and field evaluation.
 
