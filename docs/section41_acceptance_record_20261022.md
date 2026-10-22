@@ -57,3 +57,24 @@ This record documents deployment and interface acceptance only. It does not cert
 - Acceptance date: 2026-10-22
 
 **Record status:** Deployment acceptance recorded; scientific validation remains open.
+
+## Final Deployment Verification — 23 October 2026
+
+### Verified checks
+- Backend health endpoint: PASS.
+- Frontend deployment and functional smoke tests: PASS.
+- CORS preflight for the deployed frontend origin: PASS (HTTP 200).
+- Git branch synchronization: PASS (`main` aligned with `origin/main`).
+- Authoritative raster checksum verification: previously completed and matched frozen expected hashes.
+
+### Outstanding limitations
+- Independent scientific validation of groundwater recharge predictions remains pending.
+- D8 terrain-derived pathways are diagnostic proxies, not verified subsurface groundwater flow.
+- Five recharge zones are not independently validated borewell-suitability rankings.
+- Independent field assessment is required before operational borewell-siting decisions.
+- Full production security review and farmer pilot readiness are not yet certified.
+
+### Acceptance status
+Deployment and functional verification: PASS.
+Scientific field validation: PENDING.
+Full production security and pilot certification: PENDING.
