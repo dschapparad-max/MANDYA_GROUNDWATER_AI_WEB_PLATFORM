@@ -206,7 +206,7 @@ function ScientificRasterLayers({
       visible: showD8Candidate,
       metadata: d8Metadata,
       url: D8_TILE_URL,
-      opacity: 0.92,
+      opacity: 1,
       label: "Terrain-derived flow paths",
     },
     {
@@ -214,7 +214,7 @@ function ScientificRasterLayers({
       visible: showFlowDirection,
       metadata: flowDirectionMetadata,
       url: FLOW_DIRECTION_TILE_URL,
-      opacity: 0.24,
+      opacity: 0.78,
       label: "Terrain-derived flow direction",
     },
     {
@@ -449,7 +449,7 @@ function ContinuousLegend({ title, metadata }) {
         style={{
           width: "100%",
           height: 12,
-          background: "linear-gradient(to right, red, yellow, green)",
+          background: "linear-gradient(to right, #b2182b, #ef8a62, #fddbc7, #d1e5f0, #67a9cf, #2166ac)",
           border: "1px solid rgba(0,0,0,0.2)",
           boxSizing: "border-box",
         }}
@@ -464,8 +464,8 @@ function ContinuousLegend({ title, metadata }) {
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        <span>{Number(metadata.min).toFixed(4)}</span>
-        <span>{Number(metadata.max).toFixed(4)}</span>
+        <span>Low: {Number(metadata.min).toFixed(4)}</span>
+        <span>High: {Number(metadata.max).toFixed(4)}</span>
       </div>
     </div>
   );
@@ -938,6 +938,12 @@ export default function GroundwaterMap() {
           }
 
           /* Legend occupies the bottom-right column beside village search. */
+          .gw-farmer-map-legend {
+            max-height: 34% !important;
+            width: min(260px, calc(100% - 16px)) !important;
+            font-size: 10px !important;
+          }
+
           .gw-legend-container {
             left: auto !important;
             right: 8px !important;
@@ -1231,6 +1237,8 @@ export default function GroundwaterMap() {
           <label style={{ display: "block", marginBottom: 6 }}>
             Latitude
             <input
+              id="groundwater-query-latitude"
+              name="latitude"
               type="number"
               step="any"
               min="-90"
@@ -1251,6 +1259,8 @@ export default function GroundwaterMap() {
           <label style={{ display: "block", marginBottom: 6 }}>
             Longitude
             <input
+              id="groundwater-query-longitude"
+              name="longitude"
               type="number"
               step="any"
               min="-180"
@@ -1404,35 +1414,89 @@ export default function GroundwaterMap() {
       <div
         className="gw-farmer-map-legend"
         role="note"
-        aria-label="Farmer map legend"
+        aria-label="Map colour and flow legend"
         style={{
           ...panelStyle,
           top: 12,
           left: 12,
-          width: "min(270px, calc(100% - 24px))",
-          padding: "10px 12px",
+          width: "min(300px, calc(100% - 24px))",
+          maxHeight: "42%",
+          overflowY: "auto",
+          padding: "12px 14px",
         }}
       >
         <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 5 }}>
-          Mandya Groundwater Map
+          Mandya Groundwater Map — Colour Guide
         </div>
-        <div style={{ marginBottom: 7 }}>
-          Recharge index, terrain flow paths and terrain flow direction are shown together.
+        <div style={{ marginBottom: 9, color: "#334155" }}>
+          Turn layers on/off in <strong>Scientific Layers</strong>. For easier reading,
+          view one recharge layer at a time; use flow overlays when needed.
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-          <span style={{ display: "inline-block", width: 22, height: 12, borderRadius: 2, background: "linear-gradient(to right, red, yellow, green)" }} />
-          <span>Recharge index map</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-          <span style={{ display: "inline-block", width: 22, height: 3, background: "rgb(255,128,0)" }} />
-          <span>Terrain-derived flow paths</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "inline-block", width: 22, height: 12, border: "1px solid #64748b", background: "rgba(100,116,139,0.3)" }} />
-          <span>Terrain-derived flow direction</span>
-        </div>
-        <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 7, fontSize: 11, color: "#7c2d12" }}>
-          Map guidance only. Groundwater flow and borewell suitability must be checked locally.
+
+        <section aria-label="Recharge index colours" style={{ marginBottom: 11 }}>
+          <div style={{ fontWeight: 800, marginBottom: 5 }}>1. Recharge index raster</div>
+          <div style={{
+            height: 16,
+            borderRadius: 3,
+            border: "1px solid #334155",
+            background: "linear-gradient(to right, #b2182b, #ef8a62, #fddbc7, #d1e5f0, #67a9cf, #2166ac)",
+          }} />
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 3, fontWeight: 700 }}>
+            <span>Low index</span><span>High index</span>
+          </div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 3 }}>
+            The scale is illustrative; exact colours and numeric limits depend on the selected raster's tile styling and metadata. A high index is not a guarantee of water or borewell yield.
+          </div>
+        </section>
+
+        <section aria-label="Terrain flow path symbol" style={{ marginBottom: 11 }}>
+          <div style={{ fontWeight: 800, marginBottom: 5 }}>2. Terrain-derived flow paths</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="58" height="16" viewBox="0 0 58 16" aria-hidden="true" style={{ flex: "0 0 58px" }}>
+              <path d="M2 8 H56" stroke="#ffffff" strokeWidth="7" strokeLinecap="round" />
+              <path d="M2 8 H56" stroke="#17365D" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+            <span><strong>Dark blue line</strong> = candidate terrain pathway</span>
+          </div>
+          <div style={{ fontSize: 11, color: "#7c2d12", marginTop: 4 }}>
+            Diagnostic only. It does not confirm underground groundwater flow.
+          </div>
+        </section>
+
+        <section aria-label="Terrain flow direction codes" style={{ marginBottom: 9 }}>
+          <div style={{ fontWeight: 800, marginBottom: 5 }}>3. Terrain-derived D8 direction</div>
+          <div style={{ fontSize: 11, color: "#334155", marginBottom: 6 }}>
+            Direction raster colours identify coded cells; they are not flow-path lines. The symbols below explain the D8 code convention when that encoding is used by the published layer.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 4 }}>
+            {[
+              ["↖", "NW · 32"],
+              ["↑", "N · 64"],
+              ["↗", "NE · 128"],
+              ["←", "W · 16"],
+              ["•", "0 · outlet/none"],
+              ["→", "E · 1"],
+              ["↙", "SW · 8"],
+              ["↓", "S · 4"],
+              ["↘", "SE · 2"],
+            ].map(([arrow, label]) => (
+              <div key={label} style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                border: "1px solid #cbd5e1", borderRadius: 4, padding: "4px 2px",
+                background: "#f8fafc", fontSize: 11, fontWeight: 700,
+              }}>
+                <span style={{ color: "#17365D", fontSize: 16, lineHeight: 1 }}>{arrow}</span>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 5 }}>
+            These are terrain-surface routing directions, not verified subsurface groundwater-flow directions.
+          </div>
+        </section>
+
+        <div style={{ borderTop: "1px solid #cbd5e1", paddingTop: 8, fontSize: 11, color: "#7c2d12", fontWeight: 650 }}>
+          Do not select a borewell site from map colour alone. Confirm local geology, seasonal groundwater levels, and field conditions with a qualified professional.
         </div>
       </div>
     </div>
