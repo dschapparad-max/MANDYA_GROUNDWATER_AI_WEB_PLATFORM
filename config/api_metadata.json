@@ -63,7 +63,7 @@
     {
       "layer_id": "SECTION38R_D8_DIRECTION",
       "display_name": "Terrain-derived D8 Direction Code",
-      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "status": "DERIVED_TERRAIN_HYDROLOGY",
       "web_role": "DIAGNOSTIC_ONLY",
       "crs": "EPSG:32643",
       "resolution_m": 30.0,
