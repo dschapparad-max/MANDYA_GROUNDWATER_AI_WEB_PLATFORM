@@ -86,3 +86,19 @@ Full production security and pilot certification: PENDING.
 - Farmer-facing safeguards: reviewed and present.
 - Independent scientific validation: pending.
 - Full production security review and farmer pilot certification: pending.
+
+## Remaining Roadmap Actions
+
+1. Verified flow and field validation:
+   Independent groundwater and field validation remains pending.
+   D8 terrain-derived routing is diagnostic, not verified subsurface flow.
+
+2. Farmer-facing decision support:
+   Live functional checks and safeguards review passed.
+   Maintain existing scientific disclaimers and before-drilling checklist.
+
+3. Production security and pilot:
+   Deployment, backend health, API metadata, CORS and frontend checks passed.
+   Complete the full security review and obtain approval before a farmer pilot.
+
+Overall: deployment verified; scientific validation and full security/pilot certification pending.
