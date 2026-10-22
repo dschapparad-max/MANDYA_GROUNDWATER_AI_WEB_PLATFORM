@@ -47,7 +47,9 @@ const EXPECTED_FLOW_ACCUMULATION_LAYER_ID = "FLOW_ACCUMULATION_D8";
 const DEFAULT_CENTER = [12.636, 76.834];
 const DEFAULT_ZOOM = 9;
 const MIN_ZOOM = 8;
-const MAX_ZOOM = 14;
+const RASTER_MAX_ZOOM = 14;
+const MAP_MAX_ZOOM = 19;
+const LOCATION_ZOOM = 18;
 
 // -----------------------------------------------------------------------------
 // Metadata validation
@@ -99,7 +101,7 @@ function MapExtentController({ bounds, selectedLocation }) {
     if (selectedLocation) {
       map.flyTo(
         [selectedLocation.lat, selectedLocation.lon],
-        MAX_ZOOM,
+        LOCATION_ZOOM,
         { animate: true, duration: 1.2 }
       );
       return;
@@ -172,8 +174,8 @@ function ScientificRasterLayers({
       visible: showFahp,
       metadata: fahpMetadata,
       url: FAHP_TILE_URL,
-      opacity: 0.72,
-      label: "FAHP",
+      opacity: 0.58,
+      label: "Recharge index",
     },
     {
       id: "xgboost",
@@ -204,16 +206,16 @@ function ScientificRasterLayers({
       visible: showD8Candidate,
       metadata: d8Metadata,
       url: D8_TILE_URL,
-      opacity: 1.0,
-      label: "Candidate D8 pathways",
+      opacity: 0.92,
+      label: "Terrain-derived flow paths",
     },
     {
       id: "flow-direction",
       visible: showFlowDirection,
       metadata: flowDirectionMetadata,
       url: FLOW_DIRECTION_TILE_URL,
-      opacity: 0.62,
-      label: "D8 flow direction codes",
+      opacity: 0.24,
+      label: "Terrain-derived flow direction",
     },
     {
       id: "flow-accumulation",
@@ -236,7 +238,11 @@ return (
             key={`${id}-scientific-raster`}
             url={url}
             minZoom={MIN_ZOOM}
-            maxZoom={MAX_ZOOM}
+            // Raster tiles are generated only through native zoom 14.
+            // At higher map zooms, Leaflet scales the z14 raster tiles instead
+            // of requesting nonexistent z15-z19 prediction tiles.
+            maxNativeZoom={RASTER_MAX_ZOOM}
+            maxZoom={MAP_MAX_ZOOM}
             bounds={[
               [metadata.bounds.south, metadata.bounds.west],
               [metadata.bounds.north, metadata.bounds.east],
@@ -761,8 +767,8 @@ export default function GroundwaterMap() {
   const [showXgboost, setShowXgboost] = useState(false);
   const [showXgboostZones, setShowXgboostZones] = useState(false);
   const [showCnnGru, setShowCnnGru] = useState(false);
-  const [showD8Candidate, setShowD8Candidate] = useState(false);
-  const [showFlowDirection, setShowFlowDirection] = useState(false);
+  const [showD8Candidate, setShowD8Candidate] = useState(true);
+  const [showFlowDirection, setShowFlowDirection] = useState(true);
   const [showFlowAccumulation, setShowFlowAccumulation] = useState(false);
 
   // Location query state. This samples the existing authoritative rasters only;
@@ -1107,7 +1113,7 @@ export default function GroundwaterMap() {
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
         minZoom={MIN_ZOOM}
-        maxZoom={MAX_ZOOM}
+        maxZoom={MAP_MAX_ZOOM}
         style={{ width: "100%", height: "100%", minHeight: 520 }}
         scrollWheelZoom
       >
@@ -1116,6 +1122,8 @@ export default function GroundwaterMap() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
         />
+        {/* Detailed basemap zoom is independent of the frozen scientific raster pyramid. */}
+
 
         <LocationClickController
           onSelect={(lat, lon) => {
@@ -1172,7 +1180,7 @@ export default function GroundwaterMap() {
         ref={farmerPanelRef}
         className="gw-query-panel"
         role="region"
-        aria-label="Location-based recharge query"
+        aria-label="Farmer recharge advisory and location query"
         style={{
           ...panelStyle,
           zIndex: 1100,
@@ -1185,10 +1193,9 @@ export default function GroundwaterMap() {
           padding: 12,
         }}
       >
-        <strong>Farmer decision support</strong>
+        <strong>Farmer Recharge Advisory</strong>
         <p style={{ margin: "6px 0" }}>
-          Select a village for reference, then click the exact farm or proposed
-          well location on the map, or enter its WGS84 coordinates.
+          Search for your village, then tap your farm location on the map or enter its coordinates to view the local recharge-index sample and terrain information.
         </p>
 
         {selectedVillage && (
@@ -1327,7 +1334,7 @@ export default function GroundwaterMap() {
                 borderRadius: 7,
                 background: "#f8fafc",
               }}>
-                <strong>Location sample summary</strong>
+                <strong>Your location summary</strong>
                 <p style={{ margin: "5px 0" }}>
                   Latitude: {Number(queryResult.coordinates?.latitude).toFixed(6)}
                   <br />
@@ -1337,9 +1344,7 @@ export default function GroundwaterMap() {
                   Raster values available: <strong>{availableCount} of {entries.length}</strong>
                 </p>
                 <p style={{ margin: "5px 0 0", fontSize: 11 }}>
-                  These are modelled recharge-index values and spatial classes,
-                  not measured groundwater levels, guaranteed well yield,
-                  water quality or calibrated recharge probabilities.
+                  The recharge index is a modelled map indicator, not a measured groundwater level or guaranteed water availability. Terrain flow paths show surface-topography diagnostics, not verified underground water flow.
                 </p>
               </div>
 
@@ -1389,54 +1394,47 @@ export default function GroundwaterMap() {
                 fontSize: 11,
                 color: "#7c2d12",
               }}>
-                This panel does not generate a borewell-suitability ranking or
-                drilling recommendation. Confirm site conditions in the field.
+                Advisory: use this map to shortlist places for further checking only. Before drilling, confirm local geology, seasonal water levels, nearby well performance and required permissions with a qualified local groundwater professional. This map does not provide a validated borewell-suitability ranking.
               </p>
             </div>
           );
         })()}
       </div>
 
-      <ScientificLayerControl
-        showFahp={showFahp}
-        setShowFahp={setShowFahp}
-        showXgboost={showXgboost}
-        setShowXgboost={setShowXgboost}
-        showXgboostZones={showXgboostZones}
-        setShowXgboostZones={setShowXgboostZones}
-        showCnnGru={showCnnGru}
-        setShowCnnGru={setShowCnnGru}
-        showD8Candidate={showD8Candidate}
-          showFlowDirection={showFlowDirection}
-          showFlowAccumulation={showFlowAccumulation}
-        setShowD8Candidate={setShowD8Candidate}
-        setShowFlowDirection={setShowFlowDirection}
-        setShowFlowAccumulation={setShowFlowAccumulation}
-      />
-
-      <MapInterpretation
-        showFahp={showFahp}
-        showXgboost={showXgboost}
-        showXgboostZones={showXgboostZones}
-        showCnnGru={showCnnGru}
-        showD8Candidate={showD8Candidate}
-          showFlowDirection={showFlowDirection}
-          showFlowAccumulation={showFlowAccumulation}
-      />
-
-      <ScientificLegend
-        showFahp={showFahp}
-        showXgboost={showXgboost}
-        showXgboostZones={showXgboostZones}
-        showCnnGru={showCnnGru}
-        showD8Candidate={showD8Candidate}
-          showFlowDirection={showFlowDirection}
-          showFlowAccumulation={showFlowAccumulation}
-        fahpMetadata={fahpMetadata}
-        xgboostMetadata={xgboostMetadata}
-        xgboostZonesMetadata={xgboostZonesMetadata}
-        cnnGruMetadata={cnnGruMetadata}
-      />
+      <div
+        className="gw-farmer-map-legend"
+        role="note"
+        aria-label="Farmer map legend"
+        style={{
+          ...panelStyle,
+          top: 12,
+          left: 12,
+          width: "min(270px, calc(100% - 24px))",
+          padding: "10px 12px",
+        }}
+      >
+        <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 5 }}>
+          Mandya Groundwater Map
+        </div>
+        <div style={{ marginBottom: 7 }}>
+          Recharge index, terrain flow paths and terrain flow direction are shown together.
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+          <span style={{ display: "inline-block", width: 22, height: 12, borderRadius: 2, background: "linear-gradient(to right, red, yellow, green)" }} />
+          <span>Recharge index map</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+          <span style={{ display: "inline-block", width: 22, height: 3, background: "rgb(255,128,0)" }} />
+          <span>Terrain-derived flow paths</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "inline-block", width: 22, height: 12, border: "1px solid #64748b", background: "rgba(100,116,139,0.3)" }} />
+          <span>Terrain-derived flow direction</span>
+        </div>
+        <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 7, fontSize: 11, color: "#7c2d12" }}>
+          Map guidance only. Groundwater flow and borewell suitability must be checked locally.
+        </div>
+      </div>
     </div>
   );
 }
