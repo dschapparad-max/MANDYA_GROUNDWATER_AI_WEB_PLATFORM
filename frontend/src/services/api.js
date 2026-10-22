@@ -1,5 +1,12 @@
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
+export function apiUrl(path) {
+  return `${API_BASE_URL}${path}`;
+}
+
 async function apiGet(path) {
-  const response = await fetch(path);
+  const response = await fetch(apiUrl(path));
 
   if (!response.ok) {
     throw new Error(
@@ -33,16 +40,9 @@ export function getClaims() {
 export function getZones() {
   return apiGet("/api/zones");
 }
-export async function fetchRasterMetadata(layerId) {
-  const response = await fetch(
+
+export function fetchRasterMetadata(layerId) {
+  return apiGet(
     `/api/rasters/${encodeURIComponent(layerId)}/metadata`
   );
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to load raster metadata: ${response.status}`
-    );
-  }
-
-  return response.json();
 }

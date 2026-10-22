@@ -1,3 +1,4 @@
+import { apiUrl } from "../services/api";
 import VillageSearch from "./VillageSearch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -830,7 +831,7 @@ export default function GroundwaterMap() {
         lat: String(lat),
         lon: String(lon),
       });
-      const response = await fetch(`/api/raster-query?${params.toString()}`);
+      const response = await fetch(apiUrl(`/api/raster-query?${params.toString()}`));
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
