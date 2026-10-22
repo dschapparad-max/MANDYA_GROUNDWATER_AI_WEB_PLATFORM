@@ -78,3 +78,11 @@ This record documents deployment and interface acceptance only. It does not cert
 Deployment and functional verification: PASS.
 Scientific field validation: PENDING.
 Full production security and pilot certification: PENDING.
+
+### Final Test Run
+- Backend tests: 15 passed; 4 subtests passed in 1.83 seconds.
+- Backend health, API metadata, and frontend reachability: HTTP 200.
+- CORS preflight: HTTP 200 for the deployed frontend origin.
+- Farmer-facing safeguards: reviewed and present.
+- Independent scientific validation: pending.
+- Full production security review and farmer pilot certification: pending.
