@@ -102,3 +102,21 @@ Full production security and pilot certification: PENDING.
    Complete the full security review and obtain approval before a farmer pilot.
 
 Overall: deployment verified; scientific validation and full security/pilot certification pending.
+
+## Final Live Deployment Verification
+
+Date: 2026-10-23
+
+- Backend health endpoint: PASS (HTTP 200)
+- API metadata endpoint: PASS (HTTP 200)
+- Frontend deployment: PASS (HTTP 200)
+
+These checks confirm that the listed endpoints responded successfully at verification time. They do not establish complete security certification or scientific field validation.
+
+Remaining actions:
+1. Independent groundwater/flow validation using reliable field observations or reference records.
+2. Complete production security review and document findings.
+3. Conduct a farmer pilot and document feedback before claiming pilot validation.
+
+Scientific limitation: Modelled recharge indices are not direct groundwater measurements. D8 terrain routing does not verify underground flow. Borewell decisions require independent field assessment.
+
