@@ -120,3 +120,30 @@ Remaining actions:
 
 Scientific limitation: Modelled recharge indices are not direct groundwater measurements. D8 terrain routing does not verify underground flow. Borewell decisions require independent field assessment.
 
+
+## Final Software Acceptance Update — 2026-10-23
+
+### Deployment and functional verification
+
+- Backend health endpoint: PASS — HTTP 200
+- API metadata endpoint: PASS — HTTP 200
+- Frontend availability: PASS — HTTP 200
+- Backend automated tests: PASS — 15 passed, 4 subtests passed
+- Frontend dependency audit: PASS — 0 vulnerabilities found
+- Map loading and layer toggles: PASS — user-confirmed
+- Village search: PASS — user-confirmed
+- Farmer advisory: PASS — user-confirmed
+
+### Outstanding acceptance conditions
+
+- Independent groundwater and flow validation: PENDING
+- Full production security review: PENDING
+- Farmer pilot and feedback: PENDING
+
+### Scientific limitations
+
+Modelled recharge indices are not measured groundwater recharge. D8 terrain routing does not establish underground flow direction. Borewell decisions require independent field and hydrogeological assessment.
+
+Conclusion: Software deployment and the listed functional checks passed. Scientific validation, full security sign-off, and farmer pilot completion are not yet certified.
+
+
