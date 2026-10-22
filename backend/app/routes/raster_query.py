@@ -14,6 +14,8 @@ QUERY_LAYERS = {
     "XGBoost predicted recharge index": "XGBOOST_RECHARGE_PREDICTION",
     "XGBoost five-zone class": "XGBOOST_FIVE_RECHARGE_ZONES",
     "CNN-GRU predicted recharge index": "CNN_GRU_RECHARGE_PREDICTION",
+    'Terrain-derived D8 direction code': 'SECTION38R_D8_DIRECTION',
+    'Distance to terrain-derived flow pathways (m)': 'SECTION8F_V2_PATHWAY_DISTANCE',
 }
 
 

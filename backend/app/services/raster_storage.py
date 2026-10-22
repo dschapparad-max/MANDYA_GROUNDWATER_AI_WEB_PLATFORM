@@ -22,6 +22,8 @@ LAYER_OBJECTS = {
         "mandya/authoritative/cnn-gru/"
         "section38N_CNN_GRU_recharge_index_prediction_30m.tif"
     ),
+    'SECTION38R_D8_DIRECTION': 'mandya/authoritative/hydrology/section38R_flow_direction_30m.tif',
+    'SECTION8F_V2_PATHWAY_DISTANCE': 'mandya/authoritative/hydrology/SECTION8F_distance_to_primary_flow_pathways_v2_20261016.tif',
 }
 
 
