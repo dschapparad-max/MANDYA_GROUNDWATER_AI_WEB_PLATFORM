@@ -36,6 +36,9 @@ raw_data/
 Scientific raster binaries
 
 *.tif
+!backend/data/
+!backend/data/rasters/
+!backend/data/rasters/*.tif
 *.tiff
 *.img
 *.bil

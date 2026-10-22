@@ -41,7 +41,7 @@ class RasterQueryApiTests(unittest.TestCase):
             body["coordinates"]["input_crs"],
             "EPSG:4326",
         )
-        self.assertEqual(len(body["results"]), 4)
+        self.assertEqual(len(body["results"]), 6)
         self.assertIn("FAHP recharge index", body["results"])
         self.assertIn("XGBoost predicted recharge index", body["results"])
         self.assertIn("XGBoost five-zone class", body["results"])
@@ -51,7 +51,7 @@ class RasterQueryApiTests(unittest.TestCase):
         self.assertIn("percentile boundaries", body["disclaimer"])
         self.assertIn("ordinal direction", body["disclaimer"])
         self.assertIn("borewell-suitability ranking", body["disclaimer"])
-        self.assertEqual(sampler.call_count, 4)
+        self.assertEqual(sampler.call_count, 6)
 
     def test_invalid_coordinates_return_422_without_sampling(self):
         with patch(

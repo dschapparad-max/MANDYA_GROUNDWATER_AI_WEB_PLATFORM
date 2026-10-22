@@ -21,6 +21,26 @@ def _cached_raster_path(layer_id: str) -> Path:
     if layer_id not in LAYER_OBJECTS:
         raise RasterStorageError(f"Unknown raster layer: {layer_id}")
 
+    # Prefer packaged local rasters when present.
+    local_dir = Path(__file__).resolve().parents[2] / "data" / "rasters"
+    local_path = local_dir / f"{layer_id}.tif"
+
+    if local_path.is_file() and local_path.stat().st_size > 0:
+        try:
+            with rasterio.open(local_path) as dataset:
+                if dataset.count < 1 or dataset.crs is None:
+                    raise RasterStorageError(
+                        f"Local raster lacks a band or CRS: {layer_id}"
+                    )
+            return local_path
+        except RasterStorageError:
+            raise
+        except Exception as exc:
+            raise RasterStorageError(
+                f"Unable to validate local raster: {layer_id}"
+            ) from exc
+
+    # Retain the existing B2 cache/download fallback.
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     destination = CACHE_DIR / f"{layer_id}.tif"
 
@@ -40,17 +60,13 @@ def _cached_raster_path(layer_id: str) -> Path:
             delete=False,
         ) as output:
             temporary_path = Path(output.name)
-
             for chunk in body.iter_chunks(chunk_size=1024 * 1024):
                 if chunk:
                     output.write(chunk)
 
         if not temporary_path.exists() or temporary_path.stat().st_size == 0:
-            raise RasterStorageError(
-                f"Downloaded raster is empty: {layer_id}"
-            )
+            raise RasterStorageError(f"Downloaded raster is empty: {layer_id}")
 
-        # Validate the TIFF before placing it in the cache.
         with rasterio.open(temporary_path) as dataset:
             if dataset.count < 1 or dataset.crs is None:
                 raise RasterStorageError(
@@ -63,16 +79,14 @@ def _cached_raster_path(layer_id: str) -> Path:
     except Exception as exc:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
-
         if isinstance(exc, RasterStorageError):
             raise
-
         raise RasterStorageError(
             f"Unable to cache raster: {layer_id}"
         ) from exc
-
     finally:
         body.close()
+
 
 
 def sample_raster(

@@ -12,3 +12,7 @@ using Git LFS.
 *.keras filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
 
+# GeoTIFF raster data are binary files
+*.tif binary
+# GeoTIFF raster data are binary files
+*.tif binary
