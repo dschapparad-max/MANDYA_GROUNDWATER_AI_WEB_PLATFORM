@@ -59,6 +59,30 @@
       "pathway_cells": 575592,
       "threshold_cells": 12,
       "version": "SECTION8E_V2_REGENERATION_20261016"
+    },
+    {
+      "layer_id": "SECTION38R_D8_DIRECTION",
+      "display_name": "Terrain-derived D8 Direction Code",
+      "status": "AUTHORITATIVE_PROJECT_OUTPUT",
+      "web_role": "DIAGNOSTIC_ONLY",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "categorical_direction_code",
+      "description": "Terrain-derived D8 direction code: 0=no direction/outlet; 1=east; 2=southeast; 4=south; 8=southwest; 16=west; 32=northwest; 64=north; 128=northeast. This is a terrain-derived surface-flow proxy, not field-validated subsurface groundwater flow.",
+      "source_artifact": "section38R_flow_direction_30m.tif",
+      "source_sha256": "ea60eab757f2ef68bd295a443337f27c28ecadf6e4b00eaeb8f0c69d76cf7ce8"
+    },
+    {
+      "layer_id": "SECTION8F_V2_PATHWAY_DISTANCE",
+      "display_name": "Distance to Terrain-derived Flow Pathways",
+      "status": "NON_AUTHORITATIVE_CANDIDATE",
+      "web_role": "DIAGNOSTIC_ONLY",
+      "crs": "EPSG:32643",
+      "resolution_m": 30.0,
+      "value_type": "continuous_distance_m",
+      "description": "Euclidean distance in metres to the nearest cell in the regenerated Section 8E V2 terrain-derived pathway raster. This is not verified distance to mapped streams or validated subsurface groundwater flow. The documented 10-versus-12-cell threshold provenance discrepancy remains open; interpret this layer as diagnostic only.",
+      "source_artifact": "SECTION8F_distance_to_primary_flow_pathways_v2_20261016.tif",
+      "source_sha256": "913ccd155cde4d9dced437df238d796dfeff252ab0fc4cd079407b8c8384a4de"
     }
   ],
   "scientific_target": "FAHP-derived groundwater recharge index",
