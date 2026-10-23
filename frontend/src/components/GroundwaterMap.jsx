@@ -3,7 +3,9 @@ import VillageSearch from "./VillageSearch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CircleMarker,
+  GeoJSON,
   MapContainer,
+  Marker,
   Popup,
   TileLayer,
   useMap,
@@ -32,8 +34,8 @@ const CNN_GRU_TILE_URL = "/map-tiles/cnn-gru/{z}/{x}/{y}.png";
 
 const D8_METADATA_URL = "/map-tiles/d8-candidate-v2/metadata.json";
 const D8_TILE_URL = "/map-tiles/d8-candidate-v2/{z}/{x}/{y}.png";
-const FLOW_DIRECTION_METADATA_URL = "/map-tiles/flow-direction/metadata.json";
-const FLOW_DIRECTION_TILE_URL = "/map-tiles/flow-direction/{z}/{x}/{y}.png";
+const D8_STREAMS_GEOJSON_URL = "/data/d8_terrain_streams.geojson";
+const D8_STREAM_THRESHOLD_CELLS = 5000;
 const FLOW_ACCUMULATION_METADATA_URL = "/map-tiles/flow-accumulation/metadata.json";
 const FLOW_ACCUMULATION_TILE_URL = "/map-tiles/flow-accumulation/{z}/{x}/{y}.png";
 
@@ -42,7 +44,6 @@ const EXPECTED_XGBOOST_LAYER_ID = "XGBOOST_RECHARGE_PREDICTION";
 const EXPECTED_XGBOOST_ZONES_LAYER_ID = "XGBOOST_FIVE_RECHARGE_ZONES";
 const EXPECTED_CNN_GRU_LAYER_ID = "CNN_GRU_RECHARGE_PREDICTION";
 const EXPECTED_D8_LAYER_ID = "D8_CANDIDATE_PATHWAY_DIAGNOSTIC";
-const EXPECTED_FLOW_DIRECTION_LAYER_ID = "FLOW_DIRECTION_D8";
 const EXPECTED_FLOW_ACCUMULATION_LAYER_ID = "FLOW_ACCUMULATION_D8";
 
 const DEFAULT_CENTER = [12.636, 76.834];
@@ -137,130 +138,241 @@ function LocationClickController({ onSelect }) {
 }
 
 // -----------------------------------------------------------------------------
+// Connected D8 stream-like linework
+// -----------------------------------------------------------------------------
+
+function d8StreamWeight(feature) {
+  const cells = Number(feature?.properties?.max_contributing_cells ?? D8_STREAM_THRESHOLD_CELLS);
+  if (cells >= 100000) return 4.0;
+  if (cells >= 30000) return 3.1;
+  if (cells >= 10000) return 2.4;
+  return 1.6;
+}
+
+function TerrainD8StreamLayer({ visible }) {
+  const [streamData, setStreamData] = useState(null);
+  const [streamError, setStreamError] = useState(null);
+
+  useEffect(() => {
+    if (!visible || streamData) return undefined;
+    let cancelled = false;
+
+    async function loadStreamNetwork() {
+      try {
+        const response = await fetch(D8_STREAMS_GEOJSON_URL, { cache: "force-cache" });
+        if (!response.ok) {
+          throw new Error(
+            `D8 stream data could not be loaded (${response.status}). Ensure frontend/public/data/d8_terrain_streams.geojson is installed.`
+          );
+        }
+        const payload = await response.json();
+        if (
+          payload?.type !== "FeatureCollection" ||
+          !Array.isArray(payload.features)
+        ) {
+          throw new Error("The D8 stream asset is not a valid GeoJSON FeatureCollection.");
+        }
+        if (!cancelled) {
+          setStreamData(payload);
+          setStreamError(null);
+        }
+      } catch (error) {
+        if (!cancelled) setStreamError(error.message || "Unable to load D8 stream paths.");
+      }
+    }
+
+    loadStreamNetwork();
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, streamData]);
+
+  useEffect(() => {
+    if (visible && streamError) {
+      console.error("Terrain-derived D8 stream layer:", streamError);
+    }
+  }, [visible, streamError]);
+
+  const flowArrows = useMemo(() => {
+    const features = streamData?.features ?? [];
+    return features.flatMap((feature, index) => {
+      const coordinates = feature?.geometry?.coordinates;
+      const accumulation = Number(feature?.properties?.max_contributing_cells ?? 0);
+      // Arrowheads are reserved for larger paths to communicate direction without
+      // filling the smaller tributaries with markers.
+      if (
+        feature?.geometry?.type !== "LineString" ||
+        !Array.isArray(coordinates) ||
+        coordinates.length < 3 ||
+        accumulation < 100000
+      ) return [];
+
+      const pointIndex = Math.max(
+        0,
+        Math.min(coordinates.length - 2, Math.floor((coordinates.length - 1) * 0.65))
+      );
+      const start = coordinates[pointIndex];
+      const end = coordinates[pointIndex + 1];
+      const dx = Number(end[0]) - Number(start[0]);
+      const dy = Number(end[1]) - Number(start[1]);
+      if ((!dx && !dy) || !Number.isFinite(dx) || !Number.isFinite(dy)) return [];
+      // GeoJSON lines run upstream-to-downstream; flip latitude's sign for screen Y.
+      const angle = Math.atan2(-dy, dx) * (180 / Math.PI);
+      const html = `<svg width="18" height="18" viewBox="0 0 20 20" style="transform:rotate(${angle}deg);overflow:visible" aria-hidden="true"><path d="M2 10 L16 10 M10 4 L16 10 L10 16" fill="none" stroke="#f5fbff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 10 L16 10 M10 4 L16 10 L10 16" fill="none" stroke="#0b5f95" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      return [{
+        key: `d8-flow-arrow-${index}`,
+        position: [Number(start[1]), Number(start[0])],
+        icon: L.divIcon({ className: "gw-d8-flow-arrow-icon", html, iconSize: [18, 18], iconAnchor: [9, 9] }),
+      }];
+    });
+  }, [streamData]);
+
+  if (!visible || !streamData) return null;
+
+  // A pale casing plus a blue inner stroke keeps the river-like pathways legible
+  // over the OpenStreetMap basemap. This styling does not alter D8 values.
+  const outlineStyle = (feature) => ({
+    pane: "terrainDiagnosticPane",
+    color: "#f5fbff",
+    weight: d8StreamWeight(feature) + 2.3,
+    opacity: 0.98,
+    lineCap: "round",
+    lineJoin: "round",
+    fill: false,
+  });
+  const streamStyle = (feature) => ({
+    pane: "terrainDiagnosticPane",
+    color: "#1269a8",
+    weight: d8StreamWeight(feature),
+    opacity: 0.97,
+    lineCap: "round",
+    lineJoin: "round",
+    fill: false,
+  });
+
+  return (
+    <>
+      <GeoJSON
+        key="d8-stream-network-outline"
+        data={streamData}
+        pane="terrainDiagnosticPane"
+        style={outlineStyle}
+      />
+      <GeoJSON
+        key="d8-stream-network-lines"
+        data={streamData}
+        pane="terrainDiagnosticPane"
+        style={streamStyle}
+      />
+      {flowArrows.map((arrow) => (
+        <Marker
+          key={arrow.key}
+          position={arrow.position}
+          icon={arrow.icon}
+          pane="terrainDiagnosticPane"
+          interactive={false}
+          keyboard={false}
+        />
+      ))}
+    </>
+  );
+}
+
+// -----------------------------------------------------------------------------
 // Scientific raster layers
 // -----------------------------------------------------------------------------
 
 function ScientificRasterLayers({
-  showFahp,
-  showXgboost,
-  showXgboostZones,
-  showCnnGru,
-  showD8Candidate,
-  showFlowDirection,
-  showFlowAccumulation,
+  showRechargeRaster,
+  showD8Streams,
   fahpMetadata,
   xgboostMetadata,
   xgboostZonesMetadata,
   cnnGruMetadata,
-  d8Metadata,
-  flowDirectionMetadata,
-  flowAccumulationMetadata,
   onVillageSelect,
 }) {
   const map = useMap();
-  const paneName = "scientificRasterPane";
+  const basePaneName = "scientificBaseRasterPane";
+  const diagnosticPaneName = "terrainDiagnosticPane";
 
   useEffect(() => {
-    let pane = map.getPane(paneName);
+    let basePane = map.getPane(basePaneName);
+    if (!basePane) basePane = map.createPane(basePaneName);
+    basePane.style.zIndex = "410";
+    basePane.style.pointerEvents = "none";
 
-    if (!pane) pane = map.createPane(paneName);
-
-    pane.style.zIndex = "450";
-    pane.style.pointerEvents = "none";
+    let diagnosticPane = map.getPane(diagnosticPaneName);
+    if (!diagnosticPane) diagnosticPane = map.createPane(diagnosticPaneName);
+    diagnosticPane.style.zIndex = "460";
+    diagnosticPane.style.pointerEvents = "none";
   }, [map]);
 
+  // One UI checkbox controls the complete recharge-product group. All four
+  // frozen products are drawn together; transparency preserves visibility of
+  // the underlying FAHP colors. This is a visual comparison overlay, not a new
+  // mathematically fused recharge score. D8 streamlines use their own checkbox.
   const layers = [
     {
       id: "fahp",
-      visible: showFahp,
       metadata: fahpMetadata,
       url: FAHP_TILE_URL,
-      opacity: 0.58,
-      label: "Recharge index",
-    },
-    {
-      id: "xgboost",
-      visible: showXgboost,
-      metadata: xgboostMetadata,
-      url: XGBOOST_TILE_URL,
-      opacity: 0.72,
-      label: "XGBoost",
-    },
-    {
-      id: "xgboost-zones",
-      visible: showXgboostZones,
-      metadata: xgboostZonesMetadata,
-      url: XGBOOST_ZONES_TILE_URL,
-      opacity: 0.7,
-      label: "XGBoost zones",
+      opacity: 0.48,
+      label: "FAHP recharge index",
     },
     {
       id: "cnn-gru",
-      visible: showCnnGru,
       metadata: cnnGruMetadata,
       url: CNN_GRU_TILE_URL,
-      opacity: 0.72,
-      label: "CNN-GRU",
+      opacity: 0.34,
+      label: "CNN-GRU recharge-index prediction",
     },
     {
-      id: "d8-candidate-v2",
-      visible: showD8Candidate,
-      metadata: d8Metadata,
-      url: D8_TILE_URL,
-      opacity: 1,
-      label: "Terrain-derived flow paths",
+      id: "xgboost",
+      metadata: xgboostMetadata,
+      url: XGBOOST_TILE_URL,
+      opacity: 0.34,
+      label: "XGBoost recharge-index prediction",
     },
     {
-      id: "flow-direction",
-      visible: showFlowDirection,
-      metadata: flowDirectionMetadata,
-      url: FLOW_DIRECTION_TILE_URL,
-      opacity: 0.78,
-      label: "Terrain-derived flow direction",
-    },
-    {
-      id: "flow-accumulation",
-      visible: showFlowAccumulation,
-      metadata: flowAccumulationMetadata,
-      url: FLOW_ACCUMULATION_TILE_URL,
-      opacity: 0.62,
-      label: "D8 flow accumulation",
+      id: "xgboost-zones",
+      metadata: xgboostZonesMetadata,
+      url: XGBOOST_ZONES_TILE_URL,
+      opacity: 0.82,
+      label: "XGBoost recharge zones",
     },
   ];
 
-  
-return (
-  <>
-    {layers.map(
-      ({ id, visible, metadata, url, opacity }) =>
-        visible &&
-        metadata && (
+  return (
+    <>
+      {showRechargeRaster && layers.map(({ id, metadata, url, opacity }) => {
+        if (!metadata) return null;
+
+        return (
           <TileLayer
             key={`${id}-scientific-raster`}
             url={url}
+            className={`gw-recharge-raster-tile gw-recharge-raster-${id}`}
             minZoom={MIN_ZOOM}
-            // Raster tiles are generated only through native zoom 14.
-            // At higher map zooms, Leaflet scales the z14 raster tiles instead
-            // of requesting nonexistent z15-z19 prediction tiles.
             maxNativeZoom={RASTER_MAX_ZOOM}
             maxZoom={MAP_MAX_ZOOM}
             bounds={[
               [metadata.bounds.south, metadata.bounds.west],
               [metadata.bounds.north, metadata.bounds.east],
             ]}
-            pane={paneName}
-            opacity={1}
+            pane={basePaneName}
+            opacity={opacity}
             tileSize={256}
             updateWhenZooming={false}
             updateWhenIdle
+            keepBuffer={4}
           />
-        )
-    )}
+        );
+      })}
 
-    <VillageSearch onVillageSelect={onVillageSelect} />
-  </>
-);
-
+      {showD8Streams && <TerrainD8StreamLayer visible={showD8Streams} />}
+      <VillageSearch onVillageSelect={onVillageSelect} />
+    </>
+  );
 }
 
 // -----------------------------------------------------------------------------
@@ -282,32 +394,16 @@ const panelStyle = {
 
 // -----------------------------------------------------------------------------
 // Layer controls
-// Enabling one layer automatically disables the other three.
+// Exactly two choices: all recharge prediction products as one grouped layer,
+// and the D8 terrain-flow streamlines as an independent layer.
 // -----------------------------------------------------------------------------
 
 function ScientificLayerControl({
-  showFahp,
-  setShowFahp,
-  showXgboost,
-  setShowXgboost,
-  showXgboostZones,
-  setShowXgboostZones,
-  showCnnGru,
-  setShowCnnGru,
-  showD8Candidate,
-  setShowD8Candidate,
-  showFlowDirection,
-  setShowFlowDirection,
-  showFlowAccumulation,
-  setShowFlowAccumulation,
+  showRechargeRaster,
+  setShowRechargeRaster,
+  showD8Streams,
+  setShowD8Streams,
 }) {
-  const controls = [
-    ["FAHP Recharge Index", showFahp, setShowFahp],
-    ["XGBoost Prediction", showXgboost, setShowXgboost],
-    ["XGBoost Recharge Zones", showXgboostZones, setShowXgboostZones],
-    ["CNN-GRU Recharge Prediction", showCnnGru, setShowCnnGru],
-  ];
-
   return (
     <div
       className="gw-layer-control"
@@ -315,121 +411,49 @@ function ScientificLayerControl({
         ...panelStyle,
         top: 12,
         right: 12,
-        width: "min(360px, calc(100% - 24px))",
+        width: "min(330px, calc(100% - 24px))",
+        maxHeight: "38%",
+        overflowY: "auto",
         padding: "12px 14px",
       }}
     >
-      <div style={{ fontWeight: 750, fontSize: 13, marginBottom: 9 }}>
-        Scientific Layers
+      <div style={{ fontWeight: 800, fontSize: 13, marginBottom: 5 }}>
+        Map Layers
+      </div>
+      <div style={{ fontSize: 11, color: "#475569", marginBottom: 9 }}>
+        Turn all recharge prediction maps on or off together. D8 terrain flow streams are controlled separately and can be overlaid on the recharge maps.
       </div>
 
-      {controls.map(([label, checked, setChecked]) => (
-        <label
-          key={label}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 7,
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={(event) => {
-              const enabled = event.target.checked;
-
-              if (enabled) {
-                setShowFahp(label === "FAHP Recharge Index");
-                setShowXgboost(label === "XGBoost Prediction");
-                setShowXgboostZones(label === "XGBoost Recharge Zones");
-                setShowCnnGru(label === "CNN-GRU Recharge Prediction");
-                setShowD8Candidate(false);
-                setShowFlowDirection(false);
-                setShowFlowAccumulation(false);
-              } else {
-                setChecked(false);
-              }
-            }}
-          />
-          <span>{label}</span>
-        </label>
-      ))}
-
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 7,
-          cursor: "pointer",
-        }}
-      >
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, cursor: "pointer" }}>
         <input
           type="checkbox"
-          checked={showD8Candidate}
-          onChange={(event) => {
-            const enabled = event.target.checked;
-            setShowD8Candidate(enabled);
-            if (enabled) {
-              setShowFahp(false);
-              setShowXgboost(false);
-              setShowXgboostZones(false);
-              setShowCnnGru(false);
-              setShowFlowDirection(false);
-              setShowFlowAccumulation(false);
-            }
-          }}
+          checked={showRechargeRaster}
+          onChange={(event) => setShowRechargeRaster(event.target.checked)}
         />
-        <span>Candidate D8 pathways (diagnostic)</span>
+        <span>
+          <strong>Recharge index raster</strong>
+          <span style={{ display: "block", color: "#64748b", fontSize: 10.5 }}>
+            FAHP + CNN-GRU + XGBoost prediction + five-class XGBoost zones shown together; multi-colour display
+          </span>
+        </span>
       </label>
 
       <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7, cursor: "pointer" }}>
-        <input type="checkbox" checked={showFlowDirection}
-          onChange={(event) => {
-            const enabled = event.target.checked;
-            setShowFlowDirection(enabled);
-            if (enabled) {
-              setShowFahp(false);
-              setShowXgboost(false);
-              setShowXgboostZones(false);
-              setShowCnnGru(false);
-              setShowD8Candidate(false);
-              setShowFlowAccumulation(false);
-            }
-          }} />
-        <span>D8 flow direction codes (terrain-derived)</span>
+        <input
+          type="checkbox"
+          checked={showD8Streams}
+          onChange={(event) => setShowD8Streams(event.target.checked)}
+        />
+        <span>
+          <strong>D8 flow direction</strong>
+          <span style={{ display: "block", color: "#64748b", fontSize: 10.5 }}>
+            Connected blue streamlines and downstream arrows
+          </span>
+        </span>
       </label>
 
-      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 7, cursor: "pointer" }}>
-        <input type="checkbox" checked={showFlowAccumulation}
-          onChange={(event) => {
-            const enabled = event.target.checked;
-            setShowFlowAccumulation(enabled);
-            if (enabled) {
-              setShowFahp(false);
-              setShowXgboost(false);
-              setShowXgboostZones(false);
-              setShowCnnGru(false);
-              setShowD8Candidate(false);
-              setShowFlowDirection(false);
-            }
-          }} />
-        <span>D8 flow accumulation (terrain-derived)</span>
-      </label>
-
-      <div
-        style={{
-          marginTop: 8,
-          paddingTop: 8,
-          borderTop: "1px solid rgba(0,0,0,0.12)",
-          fontSize: 11,
-          color: "#555",
-        }}
-      >
-        Frozen scientific products. No frontend reclassification or model
-        inference is performed.
+      <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(0,0,0,0.12)", fontSize: 10.5, color: "#555" }}>
+        All four recharge products are shown together to retain a multi-colour map appearance. Overlapping colors are a visual overlay, not a newly calculated combined model score. D8 lines represent terrain-derived surface drainage, not verified underground groundwater flow.
       </div>
     </div>
   );
@@ -532,7 +556,7 @@ function ScientificLegend({
   showXgboostZones,
   showCnnGru,
   showD8Candidate,
-  showFlowDirection,
+  showD8Streams,
   showFlowAccumulation,
   fahpMetadata,
   xgboostMetadata,
@@ -545,7 +569,7 @@ function ScientificLegend({
     showXgboostZones,
     showCnnGru,
     showD8Candidate,
-    showFlowDirection,
+    showD8Streams,
     showFlowAccumulation,
   ].filter(Boolean).length;
 
@@ -557,11 +581,12 @@ function ScientificLegend({
       aria-label="Map legend"
       style={{
         ...panelStyle,
-        right: 12,
-        left: "auto",
-        bottom: 12,
-        width: "min(280px, calc(100% - 24px))",
-        maxHeight: "32%",
+        top: 12,
+        left: 12,
+        right: "auto",
+        bottom: "auto",
+        width: "min(270px, calc(100% - 24px))",
+        maxHeight: "28%",
         overflowY: "auto",
         overflowX: "hidden",
         padding: 8,
@@ -615,23 +640,21 @@ function ScientificLegend({
         </div>
       )}
 
-      {showFlowDirection && (
+      {showD8Streams && (
         <div className="gw-legend-card">
-          <div style={{ fontWeight: 750, marginBottom: 5 }}>D8 Flow Direction Codes</div>
-          {[
-            [0, "rgb(125,125,125)"], [1, "rgb(215,48,39)"],
-            [2, "rgb(252,141,89)"], [4, "rgb(254,224,139)"],
-            [8, "rgb(145,207,96)"], [16, "rgb(26,152,80)"],
-            [32, "rgb(44,123,182)"], [64, "rgb(117,107,177)"],
-            [128, "rgb(231,41,138)"],
-          ].map(([code, color]) => (
-            <div key={code} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-              <span style={{ width: 16, height: 12, background: color, border: "1px solid rgba(0,0,0,0.2)", flex: "0 0 16px" }} />
-              <span>Code {code}</span>
-            </div>
-          ))}
-          <div style={{ marginTop: 5, fontSize: 10, color: "#666" }}>
-            Terrain-derived codes only. Numeric codes are shown without asserting a compass convention or validated groundwater-flow direction.
+          <div style={{ fontWeight: 750, marginBottom: 6 }}>Terrain-derived D8 stream paths</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+            <svg width="64" height="16" viewBox="0 0 64 16" aria-hidden="true" style={{ flex: "0 0 64px" }}>
+              <path d="M2 9 C13 1, 20 14, 31 7 S48 3, 62 8" fill="none" stroke="#f5fbff" strokeWidth="7" strokeLinecap="round" />
+              <path d="M2 9 C13 1, 20 14, 31 7 S48 3, 62 8" fill="none" stroke="#1269a8" strokeWidth="3.5" strokeLinecap="round" />
+            </svg>
+            <span><strong>Blue line + arrow</strong> = traced D8 surface path and downstream direction</span>
+          </div>
+          <div style={{ fontSize: 10, color: "#475569" }}>
+            Paths are traced from the supplied D8 direction grid after deriving upstream contributing-cell counts. Display threshold: {D8_STREAM_THRESHOLD_CELLS.toLocaleString("en-IN")} cells (about 4.5 km² at nominal 30 m cells). Wider lines and arrowheads are used on the larger paths; arrows indicate the coded downstream direction.
+          </div>
+          <div style={{ marginTop: 5, fontSize: 10, color: "#7c2d12" }}>
+            Terrain-derived surface drainage diagnostic only. It is not a mapped river inventory or validated underground groundwater flow.
           </div>
         </div>
       )}
@@ -662,7 +685,7 @@ function MapInterpretation({
   showXgboostZones,
   showCnnGru,
   showD8Candidate,
-  showFlowDirection,
+  showD8Streams,
   showFlowAccumulation,
 }) {
   const descriptions = [
@@ -691,10 +714,10 @@ function MapInterpretation({
       title: "D8 pathway diagnostic",
       text: "Versioned regenerated terrain-derived pathway mask. It is not independently validated groundwater flow.",
     },
-    showFlowDirection && {
-      id: "flow-direction",
-      title: "D8 flow direction",
-      text: "DEM-derived direction codes for terrain drainage. These are not direct or independently validated groundwater-flow observations.",
+    showD8Streams && {
+      id: "d8-streams",
+      title: "Terrain-derived D8 stream paths",
+      text: "Connected stream-like paths traced from D8 terrain direction codes with a 5,000-cell upstream accumulation threshold. These indicate modeled surface drainage, not validated subsurface groundwater flow.",
     },
     showFlowAccumulation && {
       id: "flow-accumulation",
@@ -760,17 +783,20 @@ export default function GroundwaterMap() {
   const [xgboostZonesMetadata, setXgboostZonesMetadata] = useState(null);
   const [cnnGruMetadata, setCnnGruMetadata] = useState(null);
   const [d8Metadata, setD8Metadata] = useState(null);
-  const [flowDirectionMetadata, setFlowDirectionMetadata] = useState(null);
   const [flowAccumulationMetadata, setFlowAccumulationMetadata] = useState(null);
   const [metadataError, setMetadataError] = useState(null);
 
-  const [showFahp, setShowFahp] = useState(true);
-  const [showXgboost, setShowXgboost] = useState(false);
-  const [showXgboostZones, setShowXgboostZones] = useState(false);
-  const [showCnnGru, setShowCnnGru] = useState(false);
-  const [showD8Candidate, setShowD8Candidate] = useState(true);
-  const [showFlowDirection, setShowFlowDirection] = useState(true);
-  const [showFlowAccumulation, setShowFlowAccumulation] = useState(false);
+  // Exactly two top-level controls: all recharge products together, and D8 streams.
+  const [showRechargeRaster, setShowRechargeRaster] = useState(true);
+  const [showD8Streams, setShowD8Streams] = useState(false);
+
+  // All four frozen prediction products are part of the same displayed group.
+  const showFahp = showRechargeRaster;
+  const showCnnGru = showRechargeRaster;
+  const showXgboost = showRechargeRaster;
+  const showXgboostZones = showRechargeRaster;
+  const showD8Candidate = false;
+  const showFlowAccumulation = false;
 
   // Location query state. This samples the existing authoritative rasters only;
   // it does not run inference, modify outputs, or calculate a new suitability score.
@@ -864,6 +890,30 @@ export default function GroundwaterMap() {
       style = document.createElement("style");
       style.id = styleId;
       style.textContent = `
+        /* Preserve source tile colors; opacity is configured per member of the grouped recharge overlay. */
+        .gw-recharge-raster-tile {
+          image-rendering: auto;
+        }
+
+        .gw-d8-flow-arrow-icon {
+          background: transparent !important;
+          border: 0 !important;
+          box-shadow: none !important;
+        }
+
+        /* Keep the farmer advisory pinned to the map's bottom-right corner. */
+        .groundwater-map-root .gw-query-panel {
+          position: absolute !important;
+          top: auto !important;
+          left: auto !important;
+          right: 12px !important;
+          bottom: 12px !important;
+          width: min(360px, calc(100% - 24px)) !important;
+          max-height: 54% !important;
+          z-index: 1100 !important;
+          box-sizing: border-box !important;
+        }
+
         .gw-legend-card {
           box-sizing: border-box;
           flex: 0 0 auto;
@@ -905,13 +955,15 @@ export default function GroundwaterMap() {
           }
 
           /* The coordinate form gets its own middle band. */
+          .groundwater-map-root .gw-query-panel,
           .gw-query-panel {
             top: auto !important;
             bottom: 8px !important;
-            left: 8px !important;
             right: 8px !important;
-            width: calc(58% - 12px) !important;
-            max-height: 39% !important;
+            left: auto !important;
+            width: calc(52% - 8px) !important;
+            max-width: 300px !important;
+            max-height: 43% !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             box-sizing: border-box !important;
@@ -939,25 +991,23 @@ export default function GroundwaterMap() {
             font-size: 12px !important;
           }
 
-          /* Legend occupies the bottom-right column beside village search. */
-          .gw-farmer-map-legend {
-            max-height: 34% !important;
-            width: min(260px, calc(100% - 16px)) !important;
-            font-size: 10px !important;
-          }
-
           .gw-legend-container {
-            left: auto !important;
-            right: 8px !important;
-            bottom: 8px !important;
-            width: calc(37% - 8px) !important;
-            max-width: 160px !important;
-            max-height: 34% !important;
+            left: 8px !important;
+            right: auto !important;
+            top: 8px !important;
+            bottom: auto !important;
+            width: calc(48% - 8px) !important;
+            max-width: 200px !important;
+            max-height: 25% !important;
             box-sizing: border-box !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
             padding: 6px !important;
             font-size: 9px !important;
+          }
+
+          .gw-layer-control {
+            z-index: 1200 !important;
           }
         }
 
@@ -974,15 +1024,21 @@ export default function GroundwaterMap() {
             font-size: 9px !important;
           }
 
+          .groundwater-map-root .gw-query-panel,
           .gw-query-panel {
-            top: 27% !important;
-            max-height: 39% !important;
+            top: auto !important;
+            left: auto !important;
+            right: 8px !important;
+            bottom: 8px !important;
+            width: calc(54% - 8px) !important;
+            max-width: 240px !important;
+            max-height: 43% !important;
           }
 
           .gw-legend-container {
-            width: calc(42% - 8px) !important;
-            max-width: calc(42% - 8px) !important;
-            max-height: 33% !important;
+            width: calc(46% - 8px) !important;
+            max-width: calc(46% - 8px) !important;
+            max-height: 23% !important;
           }
 
           .gw-legend-container span {
@@ -1001,7 +1057,7 @@ export default function GroundwaterMap() {
 
     async function loadMetadata() {
       try {
-        const [fahp, xgboost, xgboostZones, cnnGru, d8Candidate, flowDirection, flowAccumulation] = await Promise.all([
+        const [fahp, xgboost, xgboostZones, cnnGru, d8Candidate, flowAccumulation] = await Promise.all([
           loadLayerMetadata(FAHP_METADATA_URL, EXPECTED_FAHP_LAYER_ID),
           loadLayerMetadata(
             XGBOOST_METADATA_URL,
@@ -1023,13 +1079,6 @@ export default function GroundwaterMap() {
             return null;
           }),
           loadLayerMetadata(
-            FLOW_DIRECTION_METADATA_URL,
-            EXPECTED_FLOW_DIRECTION_LAYER_ID
-          ).catch((error) => {
-            console.warn("Optional flow-direction layer unavailable:", error);
-            return null;
-          }),
-          loadLayerMetadata(
             FLOW_ACCUMULATION_METADATA_URL,
             EXPECTED_FLOW_ACCUMULATION_LAYER_ID
           ).catch((error) => {
@@ -1045,7 +1094,6 @@ export default function GroundwaterMap() {
         setXgboostZonesMetadata(xgboostZones);
         setCnnGruMetadata(cnnGru);
         setD8Metadata(d8Candidate);
-        setFlowDirectionMetadata(flowDirection);
         setFlowAccumulationMetadata(flowAccumulation);
         setMetadataError(null);
       } catch (error) {
@@ -1072,7 +1120,6 @@ export default function GroundwaterMap() {
       xgboostZonesMetadata ||
       cnnGruMetadata ||
       d8Metadata ||
-      flowDirectionMetadata ||
       flowAccumulationMetadata;
 
     return metadata?.bounds ?? null;
@@ -1082,8 +1129,7 @@ export default function GroundwaterMap() {
     xgboostZonesMetadata,
     cnnGruMetadata,
     d8Metadata,
-    flowDirectionMetadata,
-    flowAccumulationMetadata,
+      flowAccumulationMetadata,
   ]);
 
   if (metadataError) {
@@ -1161,20 +1207,12 @@ export default function GroundwaterMap() {
         )}
 
         <ScientificRasterLayers
-          showFahp={showFahp}
-          showXgboost={showXgboost}
-          showXgboostZones={showXgboostZones}
-          showCnnGru={showCnnGru}
-          showD8Candidate={showD8Candidate}
-          showFlowDirection={showFlowDirection}
-          showFlowAccumulation={showFlowAccumulation}
+          showRechargeRaster={showRechargeRaster}
+          showD8Streams={showD8Streams}
           fahpMetadata={fahpMetadata}
           xgboostMetadata={xgboostMetadata}
           xgboostZonesMetadata={xgboostZonesMetadata}
           cnnGruMetadata={cnnGruMetadata}
-          d8Metadata={d8Metadata}
-          flowDirectionMetadata={flowDirectionMetadata}
-          flowAccumulationMetadata={flowAccumulationMetadata}
           onVillageSelect={handleVillageSelect}
         />
 
@@ -1193,11 +1231,11 @@ export default function GroundwaterMap() {
           ...panelStyle,
           zIndex: 1100,
           right: 12,
-          left: "auto" ,
           bottom: 12,
+          left: "auto",
           top: "auto",
-          width: "min(340px, calc(100% - 24px))",
-          maxHeight: "52%",
+          width: "min(360px, calc(100% - 24px))",
+          maxHeight: "58%",
           overflowY: "auto",
           padding: 12,
         }}
@@ -1357,7 +1395,7 @@ export default function GroundwaterMap() {
                   Raster values available: <strong>{availableCount} of {entries.length}</strong>
                 </p>
                 <p style={{ margin: "5px 0 0", fontSize: 11 }}>
-                  The recharge index is a modelled map indicator, not a measured groundwater level or guaranteed water availability. Terrain flow paths show surface-topography diagnostics, not verified underground water flow.
+                  The recharge index is a modelled map indicator, not a measured groundwater level or guaranteed water availability. Blue stream-like paths show terrain-derived surface routing, not verified underground water flow.
                 </p>
               </div>
 
@@ -1414,94 +1452,26 @@ export default function GroundwaterMap() {
         })()}
       </div>
 
-      <div
-        className="gw-farmer-map-legend"
-        role="note"
-        aria-label="Map colour and flow legend"
-        style={{
-          ...panelStyle,
-          top: 12,
-          left: 12,
-          width: "min(300px, calc(100% - 24px))",
-          maxHeight: "42%",
-          overflowY: "auto",
-          padding: "12px 14px",
-        }}
-      >
-        <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 5 }}>
-          Mandya Groundwater Map — Colour Guide
-        </div>
-        <div style={{ marginBottom: 9, color: "#334155" }}>
-          Turn layers on/off in <strong>Scientific Layers</strong>. For easier reading,
-          view one recharge layer at a time; use flow overlays when needed.
-        </div>
+      <ScientificLayerControl
+        showRechargeRaster={showRechargeRaster}
+        setShowRechargeRaster={setShowRechargeRaster}
+        showD8Streams={showD8Streams}
+        setShowD8Streams={setShowD8Streams}
+      />
 
-        <section aria-label="Recharge index colours" style={{ marginBottom: 11 }}>
-          <div style={{ fontWeight: 800, marginBottom: 5 }}>1. Recharge index raster</div>
-          <div style={{
-            height: 16,
-            borderRadius: 3,
-            border: "1px solid #334155",
-            background: "linear-gradient(to right, #b2182b, #ef8a62, #fddbc7, #d1e5f0, #67a9cf, #2166ac)",
-          }} />
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 3, fontWeight: 700 }}>
-            <span>Low index</span><span>High index</span>
-          </div>
-          <div style={{ fontSize: 11, color: "#475569", marginTop: 3 }}>
-            The scale is illustrative; exact colours and numeric limits depend on the selected raster's tile styling and metadata. A high index is not a guarantee of water or borewell yield.
-          </div>
-        </section>
-
-        <section aria-label="Terrain flow path symbol" style={{ marginBottom: 11 }}>
-          <div style={{ fontWeight: 800, marginBottom: 5 }}>2. Terrain-derived flow paths</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <svg width="58" height="16" viewBox="0 0 58 16" aria-hidden="true" style={{ flex: "0 0 58px" }}>
-              <path d="M2 8 H56" stroke="#ffffff" strokeWidth="7" strokeLinecap="round" />
-              <path d="M2 8 H56" stroke="#17365D" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-            <span><strong>Dark blue line</strong> = candidate terrain pathway</span>
-          </div>
-          <div style={{ fontSize: 11, color: "#7c2d12", marginTop: 4 }}>
-            Diagnostic only. It does not confirm underground groundwater flow.
-          </div>
-        </section>
-
-        <section aria-label="Terrain flow direction codes" style={{ marginBottom: 9 }}>
-          <div style={{ fontWeight: 800, marginBottom: 5 }}>3. Terrain-derived D8 direction</div>
-          <div style={{ fontSize: 11, color: "#334155", marginBottom: 6 }}>
-            Direction raster colours identify coded cells; they are not flow-path lines. The symbols below explain the D8 code convention when that encoding is used by the published layer.
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 4 }}>
-            {[
-              ["↖", "NW · 32"],
-              ["↑", "N · 64"],
-              ["↗", "NE · 128"],
-              ["←", "W · 16"],
-              ["•", "0 · outlet/none"],
-              ["→", "E · 1"],
-              ["↙", "SW · 8"],
-              ["↓", "S · 4"],
-              ["↘", "SE · 2"],
-            ].map(([arrow, label]) => (
-              <div key={label} style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                border: "1px solid #cbd5e1", borderRadius: 4, padding: "4px 2px",
-                background: "#f8fafc", fontSize: 11, fontWeight: 700,
-              }}>
-                <span style={{ color: "#17365D", fontSize: 16, lineHeight: 1 }}>{arrow}</span>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: "#475569", marginTop: 5 }}>
-            These are terrain-surface routing directions, not verified subsurface groundwater-flow directions.
-          </div>
-        </section>
-
-        <div style={{ borderTop: "1px solid #cbd5e1", paddingTop: 8, fontSize: 11, color: "#7c2d12", fontWeight: 650 }}>
-          Do not select a borewell site from map colour alone. Confirm local geology, seasonal groundwater levels, and field conditions with a qualified professional.
-        </div>
-      </div>
+      <ScientificLegend
+        showFahp={showFahp}
+        showXgboost={showXgboost}
+        showXgboostZones={showXgboostZones}
+        showCnnGru={showCnnGru}
+        showD8Candidate={showD8Candidate}
+        showD8Streams={showD8Streams}
+        showFlowAccumulation={showFlowAccumulation}
+        fahpMetadata={fahpMetadata}
+        xgboostMetadata={xgboostMetadata}
+        xgboostZonesMetadata={xgboostZonesMetadata}
+        cnnGruMetadata={cnnGruMetadata}
+      />
     </div>
   );
 }
