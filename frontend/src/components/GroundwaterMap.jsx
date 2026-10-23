@@ -249,7 +249,7 @@ return (
               [metadata.bounds.north, metadata.bounds.east],
             ]}
             pane={paneName}
-            opacity={opacity}
+            opacity={1}
             tileSize={256}
             updateWhenZooming={false}
             updateWhenIdle
@@ -906,10 +906,11 @@ export default function GroundwaterMap() {
 
           /* The coordinate form gets its own middle band. */
           .gw-query-panel {
-            top: 27% !important;
+            top: auto !important;
+            bottom: 8px !important;
             left: 8px !important;
             right: 8px !important;
-            width: auto !important;
+            width: calc(58% - 12px) !important;
             max-height: 39% !important;
             overflow-x: hidden !important;
             overflow-y: auto !important;
@@ -1191,9 +1192,10 @@ export default function GroundwaterMap() {
         style={{
           ...panelStyle,
           zIndex: 1100,
-          right: "auto",
-          left: "35%",
-          top: "31%",
+          right: 12,
+          left: "auto" ,
+          bottom: 12,
+          top: "auto",
           width: "min(340px, calc(100% - 24px))",
           maxHeight: "52%",
           overflowY: "auto",
