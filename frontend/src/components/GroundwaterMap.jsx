@@ -500,11 +500,11 @@ function XgboostZonesLegend({ metadata }) {
   if (!metadata) return null;
 
   const zones = [
-    ["1", "Class 1", "rgb(215,48,39)"],
-    ["2", "Class 2", "rgb(252,141,89)"],
-    ["3", "Class 3", "rgb(254,224,139)"],
-    ["4", "Class 4", "rgb(145,207,96)"],
-    ["5", "Class 5", "rgb(26,152,80)"],
+    ["1", "Class 1", "rgb(215,48,39)", "0–20th percentile"],
+    ["2", "Class 2", "rgb(252,141,89)", "20th–40th percentile"],
+    ["3", "Class 3", "rgb(254,224,139)", "40th–60th percentile"],
+    ["4", "Class 4", "rgb(145,207,96)", "60th–80th percentile"],
+    ["5", "Class 5", "rgb(26,152,80)", "80th–100th percentile"],
   ];
 
   return (
@@ -513,7 +513,7 @@ function XgboostZonesLegend({ metadata }) {
         XGBoost Recharge-Index Classes
       </div>
 
-      {zones.map(([zone, label, color]) => (
+      {zones.map(([zone, label, color, percentile]) => (
         <div
           key={zone}
           style={{
@@ -534,7 +534,7 @@ function XgboostZonesLegend({ metadata }) {
             }}
           />
           <span>
-            Zone {zone} — {label}
+            Zone {zone} — {label} ({percentile})
           </span>
         </div>
       ))}
